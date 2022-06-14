@@ -1,0 +1,69 @@
+openapi: '3.0.2'
+info:
+  description: "Culturize-web"
+  version: "2.0.0"
+  title: "CultURIze-web"
+  contact:
+    email: "info@meemoo.be"
+tags:
+- name: "api"
+  description: "Everything about record handling"
+- name: "redirect"
+  description: "redirect operation"
+security:
+  - Culturize-Key: []
+components:
+  securitySchemes:
+    Culturize-Key:
+      type: apiKey
+      in: header
+      name: "Culturize-Key"
+paths:
+  /api/record:
+    post:
+      tags:
+      - "api"
+      summary: "Add one or multiple new record to database"
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                  resource_url:
+                    type: string
+                  persistent_url:
+                    type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resource_url:
+                    type: string
+                  persistent_url:
+                    type: string
+        "405":
+          description: "Invalid input"
+    get:
+      summary: Get all records
+      tags:
+      - api
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    resource_url:
+                      type: string
+                    persistent_url:
+                      type: string
