@@ -75,8 +75,7 @@ POSTGRES_DB=culturize-web
 Run the two commands below to build and start the webservice.
 * `docker-compose -f docker-compose.prod.yml up -d --build`
 * `docker-compose -f docker-compose.prod.yml exec web python manage.py migrate --noinput`
-
-
+After installing running `docker-compose up -f` from the repo can be used to start the Culturize Webservice. 
 
 
 
