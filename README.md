@@ -69,7 +69,7 @@ POSTGRES_PASSWORD=culturize
 POSTGRES_DB=culturize-web
 ```
 * Paste a password in the "acceskey" file at 
-`/culturize-web/app/culturizeweb/accesskey`
+`culturize-web/app/culturizeweb/accesskey`
 
 ### Installing
 Run the two commands below to build and start the webservice.
