@@ -62,7 +62,7 @@ SQL_HOST=db
 SQL_PORT=5432
 DATABASE=postgres
 ```
-* Create another file at the root of the repo `.env.prod.db`, make sure the username and password from `SQL_DATABASE=` and `SQL_PASSWORD=` are in sync with `POSTGRES_PASSWORD=` and `POSTGRES_DB=` from `.env.prod.
+* Create another file at the root of the repo `.env.prod.db`, make sure the username and password from `SQL_DATABASE=` and `SQL_PASSWORD=` are in sync with `POSTGRES_PASSWORD=` and `POSTGRES_DB=` from `.env.prod.`
 ```
 POSTGRES_USER=TheSameUsernameAsYouUsedAtSQL_DATABASEin.env.prod
 POSTGRES_PASSWORD=culturize
