@@ -55,6 +55,8 @@ Run the two commands below to build and start the webservice.
 * `docker-compose -f docker-compose.prod.yml exec web python manage.py migrate --noinput`
 After installing running `docker-compose up -f` from the repo can be used to start the Culturize Webservice. 
 
+( If you get "Command 'docker-compose' not found..." you might not have installed Docker-compose or you have installed a newer version and you need to use `docker compose -f docker-compose.prod.yml up -d --build` and `docker compose -f docker-compose.prod.yml exec web python manage.py migrate --noinput` )
+
 
 ## API documentation:
 
