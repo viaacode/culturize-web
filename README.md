@@ -46,8 +46,8 @@ POSTGRES_USER=TheSameUsernameAsYouUsedAtSQL_DATABASEin.env.prod
 POSTGRES_PASSWORD=TheSameUsernameAsYouUsedAtSQL_DATABASEin.env.prod
 POSTGRES_DB=culturize-web
 ```
-* Paste a password in the "acceskey" file at 
-`culturize-web/app/culturizeweb/accesskey`
+* Replace the default password in the "acceskey" file at 
+`culturize-web/app/culturizeweb/accesskey` to something else
 
 ##### Installing
 Run the two commands below to build and start the webservice.
