@@ -27,7 +27,7 @@ Make sure the server is configure with SSL to ensure communication to and from t
 
 * Clone this repo
 * Create a environment file called `.env.prod` in the root of the repository.
-* Copy paste this inside the `.env.prod` file. Replace "culturize" after `SQL_DATABASE=` and `SQL_PASSWORD=` with your own made up username and password. 
+* Copy paste this inside the `.env.prod` file. Replace "culturize" after `SQL_DATABASE=` and `SQL_PASSWORD=` with your own made up name and password. 
 ```
 DEBUG=1
 SECRET_KEY=ruWxpjmdysErePWRKEpckOCCefmIGp
