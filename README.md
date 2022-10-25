@@ -57,6 +57,12 @@ After installing running `docker-compose up -f` from the repo can be used to sta
 
 ( If you get "Command 'docker-compose' not found..." you might not have installed Docker-compose or you have installed a newer version and you need to use `docker compose -f docker-compose.prod.yml up -d --build` and `docker compose -f docker-compose.prod.yml exec web python manage.py migrate --noinput` )
 
+If you get unauthorized access on the last command (manage.py migrate) it can be that you first
+created the database container with the wrong credentials. You'll need to remove the attached docker
+volume to recreate the database with the correct credentials. You can list the docker volumes with
+'docker volume ls' after you identified the database volume (will have db in it's name) you can
+remove it with 'docker volume rm <volume-name>'.
+
 
 ## API documentation:
 
