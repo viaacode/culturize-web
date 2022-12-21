@@ -1,11 +1,12 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-from api.models import Record
+from api.models import Record, RequestLog
 
 from django.db.utils import IntegrityError
 
 
 class RecordSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True, required=False)
     resource_url = serializers.URLField(required=True)
     persistent_url = serializers.CharField(required=True)
     enabled = serializers.BooleanField(required=False)
@@ -29,3 +30,12 @@ class RequestLogSerializer(serializers.Serializer):
     persistent_url = serializers.CharField(required=True, source="record.persistent_url")
     referer = serializers.CharField()
 
+class RecordRequestLogSerializer(serializers.Serializer):
+    click_count = serializers.SerializerMethodField(method_name='get_click_count')
+
+    def __init__(self, record_id):
+        self.record_id = record_id
+
+    def get_click_count(self):
+        return RequestLog.objects.filter(pk=self.record_id).count()
+        
