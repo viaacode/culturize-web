@@ -1,19 +1,42 @@
 import { createRouter, createWebHistory } from "vue-router";
-//import { Entrie } from "@/pages/Entry.vue";
-//import { Logs } from "@/pages/Logs.vue";
-//import { Log } from "@/pages/Log.vue";
+import { useAuthStore } from "@/stores/Auth";
 
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: "/", name: "root", redirect: "/entries" },
-    { path: "/entries", name: "entries", component: () => import("@/pages/Entries.vue") },
-    //{ path: "/entries", name: "entries", component: Entries },
-    //{ path: "/entry/:id", name: "entry", component: Entrie },
-    { path: "/logs", name: "logs", component: () => import("@/pages/Logs.vue") },
+    { path: "/", name: "root", redirect: "/records" },
+    {
+      path: "/records",
+      name: "records",
+      component: () => import("@/pages/Records.vue")
+    },
+    {
+      path: "/record/:id",
+      name: "record",
+      component: () => import("@/pages/Record.vue")
+    },
+    //{ path: "/record/:id", name: "record", component: Record },
+    {
+      path: "/logs",
+      name: "logs",
+      component: () => import("@/pages/Logs.vue")
+    },
     //{ path: "/logs:id", name: "log", component: Log },
+    {
+      path: "/login",
+      name: "login",
+      component: () => import("@/pages/Login.vue")
+    },
   ],
+});
+
+router.beforeEach(async (to, _) => {
+  const authStore = useAuthStore();
+  if (to.name !== "login" && await authStore.isAuthenticated == false) {
+    console.log("going to login");
+    return { name: "login" };
+  }
 });
 
 export { router };

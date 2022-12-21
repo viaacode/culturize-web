@@ -1,12 +1,11 @@
 <template>
-<nav style="padding-left: 10px;" aria-label="breadcrumb">
-</nav>
+  <nav style="padding-left: 10px" aria-label="breadcrumb"></nav>
   <logs-table :logs="store.logs" />
 </template>
 
 <script setup lang="ts">
   import LogsTable from "@/components/LogsTable.vue";
-  import { useEntriesStore } from "@/stores/Entries";
-  const store = useEntriesStore();
+  import { useRecordsStore } from "@/stores/Records";
+  const store = useRecordsStore();
   store.fetchLogs();
 </script>
