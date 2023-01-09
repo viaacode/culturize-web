@@ -3,9 +3,9 @@ import { useAuthStore } from "@/stores/Auth";
 
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory("/dashboard/"),
   routes: [
-    { path: "/", name: "root", redirect: "/records" },
+    { path: "/", name: "root", component: () => import("@/pages/Root.vue") },
     {
       path: "/records",
       name: "records",

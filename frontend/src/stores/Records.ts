@@ -24,6 +24,11 @@ interface CRecordsMap {
 interface CRecordsLogsMap {
   [index: string]: CRecordLogs;
 }
+export interface ServiceInfo {
+  record_count: number;
+  enabled_count: number;
+  click_count: number;
+}
 
 
 export const useRecordsStore = defineStore("record", {
@@ -31,6 +36,7 @@ export const useRecordsStore = defineStore("record", {
     records: {} as CRecordsMap,
     logs: [] as Array<Log>,
     recordLogs: {} as CRecordsLogsMap,
+    serviceInfo: {} as ServiceInfo
   }),
   actions: {
     async fetch() {
@@ -54,6 +60,11 @@ export const useRecordsStore = defineStore("record", {
     },
     reset() {
       this.$reset();
-    }
+    },
+    async fetchServiceInfo() {
+      const data = await culturize_web.get<ServiceInfo>("info");
+
+      this.serviceInfo = data;
+    },
   },
 });
