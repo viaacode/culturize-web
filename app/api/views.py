@@ -6,8 +6,9 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
+from rest_framework import status, pagination
 
+import csv
 import json
 import logging
 
@@ -36,10 +37,11 @@ class RecordList(APIView):
         key = request.META.get("HTTP_CULTURIZE_KEY")
         if key != access_key:
             return HttpResponse('Unauthorized', status=401)
-        records = Record.objects.all()
-        #paginator = LimitOffsetPagination()
-        serializer = RecordSerializer(instance=records, many=True)
-        return Response(serializer.data)
+        records = Record.objects.all().order_by("id")
+        paginator = pagination.PageNumberPagination()
+        result_page = paginator.paginate_queryset(records, request)
+        serializer = RecordSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
         key = request.META.get("HTTP_CULTURIZE_KEY")
@@ -95,20 +97,19 @@ class LogList(APIView):
         key = request.META.get("HTTP_CULTURIZE_KEY")
         if key != access_key:
             return HttpResponse('Unauthorized', status=401)
-        logs = RequestLog.objects.all()
-        serializer = RequestLogSerializer(instance=logs, many=True)
-        return Response(serializer.data)
+        logs = RequestLog.objects.all().order_by("id")
+        paginator = pagination.PageNumberPagination()
+        result_page = paginator.paginate_queryset(logs, request)
+        serializer = RequestLogSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 class RecordLogDetail(APIView):
     def get_record_log_count(self, rid):
-        logger.info("log count")
         try:
             r = Record.objects.get(pk=rid)
             c = RequestLog.objects.filter(record=r).count()
-            logger.info(c)
             return c
         except Record.DoesNotExist as e:
-            logger.info(e)
             return 0
 
     def get(self, request, rid, format=None):
@@ -116,6 +117,18 @@ class RecordLogDetail(APIView):
         if key != access_key:
             return HttpResponse('Unauthorized', status=401)
         return Response({"click_count": self.get_record_log_count(rid)})
+
+class LogCSVExportView(APIView):
+    def get(self, request, *args, **kwargs):
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = 'attachment; filename="export.csv"'
+        writer = csv.writer(response)
+
+        for log in RequestLog.objects.all():
+            row = [log.datetime.isoformat(), log.record.persistent_url, str(log.referer)]
+            writer.writerow(row)
+        return response
+
 
 class Login(APIView):
     def post(self, request, format=None):

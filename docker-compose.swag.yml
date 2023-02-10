@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 services:
   web:
@@ -6,8 +6,6 @@ services:
       context: ./app
       dockerfile: Dockerfile.prod
     command: gunicorn culturizeweb.wsgi:application --bind 0.0.0.0:8000
-    volumes:
-      - static_volume:/home/app/web/staticfiles
     expose:
       - 8000
     env_file:

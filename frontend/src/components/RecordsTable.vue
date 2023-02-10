@@ -1,5 +1,8 @@
 <template>
   <div class="container-xl">
+    <button @click="prevPage" type="button" class="culturize btn btn-primary">Previous</button>
+    <button @click="nextPage" type="button" class="culturize btn btn-primary">Next</button>
+
     <table class="table table-hover">
       <thead>
         <tr>
@@ -11,7 +14,10 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="record in props.records" :key="record.persistent_url">
+        <tr
+          v-for="record in store.record_page[state.currentPage].results"
+          :key="record.persistent_url"
+        >
           <td>{{ record.persistent_url }}</td>
           <td>{{ record.resource_url }}</td>
           <td>{{ record.enabled }}</td>
@@ -33,5 +39,30 @@
 </template>
 
 <script setup lang="ts">
-  const props = defineProps(["records"]);
+import { reactive, onMounted, ref } from "vue";
+import { useRecordsStore } from "@/stores/Records";
+const store = useRecordsStore();
+
+const state = reactive({ currentPage: 1})
+
+async function handlePageChange(page: number) {
+  await store.fetch(page);
+  state.currentPage = page;
+}
+function prevPage () {
+  if (state.currentPage > 1) {
+    handlePageChange(state.currentPage-1);
+  }
+}
+function nextPage () {
+  if (state.currentPage * store.record_page_size < store.record_count) {
+    handlePageChange(state.currentPage+1);
+  }
+}
 </script>
+
+<style scoped>
+.culturize {
+  background-color: #1CD2A7;
+}
+</style>

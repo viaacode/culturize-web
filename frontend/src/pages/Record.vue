@@ -45,8 +45,8 @@ const state: i_state = reactive({ record: undefined, recordLogs: undefined });
 
 onMounted( async () => {
   const recordStore = useRecordsStore();
-  state.record = recordStore.records[id];
-  await recordStore.fetchRecordLogs(id);
+  await Promise.all([recordStore.fetchRecord(id), recordStore.fetchRecordLogs(id)]);
+  state.record = recordStore.record_details[id];
   state.recordLogs = recordStore.recordLogs[id];
 });
 

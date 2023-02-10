@@ -7,21 +7,17 @@ sql_host="db" # docker compose makes service name available as dns name
 sql_port=5432
 sql_database="culturize"
 sql_user="culturize"
+secret_key=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 25)
+echo "secret key generated"
+sql_password=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 20)
+echo "SQL password generated"
 
-read -r -p "Enter security key or leave empty for auto generation: " resp
+read -r -p "Enter api/login key or leave empty for auto generation: " resp
 if [[ -z "$resp" ]]; then
-    secret_key=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 25)
-    echo "secret key generated"
+    api_accesskey=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 20)
+    echo "api/login key generated"
 else
-    secret_key=$resp
-fi
-
-read -r -p "Enter sql password or leave empty for auto generation: " resp
-if [[ -z "$resp" ]]; then
-    sql_password=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 20)
-    echo "SQL password generated"
-else
-    sql_password=$resp
+    api_accesskey=$resp
 fi
 
 read -r -p "Specify the domain name on which culturize-web will be hosted: " resp
@@ -46,14 +42,13 @@ elif [[ "$resp" == "n" || "$resp" == "N" ]]; then
     use_swag=false
 fi
 
-# TODO allowed hosts
-# TODO copy docker compose files
 
+echo ${api_accesskey} > app/culturizeweb/accesskey
 
 
 echo "DEBUG=${debugflag}" > .env.web
 echo "SECRET_KEY=${secret_key}" >> .env.web
-echo "DJANGO_ALLOWED_HOSTS=['${domain_name}']" >> .env.web
+echo "DJANGO_ALLOWED_HOSTS=${domain_name}" >> .env.web
 echo "SQL_ENGINE=${sql_engine}" >> .env.web
 echo "SQL_DATABASE=${sql_database}" >> .env.web
 echo "SQL_USER=${sql_user}" >> .env.web
@@ -80,5 +75,10 @@ fi
 
 cat << EOF
 Setup finished. Use this to build and run the docker containers:
+
     docker-compose up -d --build
+
+Then do the initial database creation:
+
+    docker-compose exec web python manage.py migrate --noinput
 EOF

@@ -17,7 +17,8 @@ export const useAuthStore = defineStore("auth", {
         this.apikey = password;
         culturize_web.options.headers = { "Culturize-Key": password };
         const recordsStore = useRecordsStore();
-        await recordsStore.fetch();
+        await recordsStore.fetch(1);
+        await recordsStore.fetchLogs(1);
         return true;
       }
       return false;
@@ -34,7 +35,8 @@ export const useAuthStore = defineStore("auth", {
           localStorage.setItem("password", this.apikey);
           localStorage.setItem("username", username);
           const recordsStore = useRecordsStore();
-          await recordsStore.fetch();
+          await recordsStore.fetch(1);
+          await recordsStore.fetchLogs(1);
         } else {
           this.apikey = "";
           culturize_web.options.headers = { "Culturize-Key": "" };

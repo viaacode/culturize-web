@@ -36,6 +36,7 @@
           </li>
         </ul>
         <div class="d-flex btn-group" role="group" aria-label="Basic example">
+          <button class="btn btn-dark" type="submit" @click="logsdownload">Download Logs</button>
           <button class="btn btn-dark" type="submit" @click="refresh">
             <i class="bi bi-arrow-counterclockwise"></i>
           </button>
@@ -50,6 +51,9 @@
 import { computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/Auth";
+import { culturize_web } from "@/api/api";
+import { useRecordsStore } from "@/stores/Records";
+const store = useRecordsStore();
 
 const router = useRouter()
 const route = useRoute()
@@ -63,6 +67,10 @@ const authStore = useAuthStore();
 const logout = () => {
   authStore.logout();
   router.push({ name: "login" });
+}
+
+const logsdownload = () => {
+  store.logCSVDownload();
 }
 
 const refresh = () => {

@@ -10,7 +10,7 @@ RUN npm run build
 FROM linuxserver/swag:2.2.0 AS prod
 
 RUN rm -rf /config/nginx/proxy-confs/*
-RUN rm -rf /config/nginx/site-confs/*
-COPY swag.nginx.conf /config/nginx/site-confs/default
+#RUN rm -rf /config/nginx/site-confs/*
+COPY nginx.swag.conf /config/nginx/site-confs/default.conf
 
 COPY --from=build-stage /app/dist /config/www

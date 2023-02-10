@@ -53,7 +53,7 @@ export default {
       const authStore = useAuthStore();
       await authStore.login(this.username, this.password);
       if (await authStore.isAuthenticated) {
-        router.push({ name: "records" });
+        router.push({ name: "root" });
       } else {
         this.error = "login failed";
       }

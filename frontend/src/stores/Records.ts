@@ -7,17 +7,39 @@ export interface Log {
   persistent_url: string;
   referer: string;
 }
+export interface PaginatedLog {
+  count: number;
+  next: string | undefined;
+  previous: string | undefined;
+  results: Log[];
+}
+
+interface PaginatedLogMap {
+  [key: number]: PaginatedLog;
+}
+
 export interface CRecord {
   id: number;
   resource_url: string;
   persistent_url: string;
   enabled: boolean;
 }
+export interface PaginatedRecord {
+  count: number;
+  next: string | undefined;
+  previous: string | undefined;
+  results: CRecord[];
+}
+
+interface PaginatedRecordMap {
+  [key: number]: PaginatedRecord;
+}
+
 export interface CRecordLogs {
   click_count: number;
 }
 
-interface CRecordsMap {
+interface CRecordMap {
   [index: string]: CRecord;
 }
 
@@ -33,25 +55,41 @@ export interface ServiceInfo {
 
 export const useRecordsStore = defineStore("record", {
   state: () => ({
-    records: {} as CRecordsMap,
-    logs: [] as Array<Log>,
+    record_count: 0 as number,
+    record_page_size: 0 as number,
+    record_page: {} as PaginatedRecordMap,
+    record_details: {} as CRecordMap,
+    log_count: 0 as number,
+    log_page_size: 0 as number,
+    log_page: {} as PaginatedLogMap,
     recordLogs: {} as CRecordsLogsMap,
     serviceInfo: {} as ServiceInfo
   }),
   actions: {
-    async fetch() {
-      const data = await culturize_web.get<CRecord[]>("record");
+    // add page to fetch
+    async fetch(page: number) {
+      const data = await culturize_web.get<PaginatedRecord>("record", {query: {"page": page}});
 
-      for (const record of data) {
-        this.records[record.id] = record;
+      this.record_count = data.count;
+      this.record_page[page] = data;
+      if (page == 1) {
+        this.record_page_size = data.results.length;
       }
     },
-    async fetchLogs() {
-      const data = await culturize_web.get<
-        { persistent_url: string; datetime: string; referer: string }[]
-      >("logs");
+    async fetchLogs(page: number) {
+      const data = await culturize_web.get<PaginatedLog>("logs", {query: {"page": page}});
+      console.log("got logs for page", page);
 
-      this.logs = data;
+      this.log_count = data.count;
+      this.log_page[page] = data;
+      if (page == 1) {
+        this.log_page_size = data.results.length;
+      }
+    },
+    async fetchRecord(id: string) {
+      const data = await culturize_web.get<CRecord>(`record/${id}`);
+
+      this.record_details[id] = data;
     },
     async fetchRecordLogs(id: string) {
       const data = await culturize_web.get<CRecordLogs>(`logs/${id}`);
@@ -66,5 +104,15 @@ export const useRecordsStore = defineStore("record", {
 
       this.serviceInfo = data;
     },
+    async logCSVDownload() {
+      const data = await culturize_web.get<any>("logexport");
+      const blob = new Blob([data], {type: "text/csv"});
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = "export.csv";
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+
   },
 });
