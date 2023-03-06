@@ -120,6 +120,9 @@ class RecordLogDetail(APIView):
 
 class LogCSVExportView(APIView):
     def get(self, request, *args, **kwargs):
+        key = request.META.get("HTTP_CULTURIZE_KEY")
+        if key != access_key:
+            return HttpResponse('Unauthorized', status=401)
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = 'attachment; filename="export.csv"'
         writer = csv.writer(response)

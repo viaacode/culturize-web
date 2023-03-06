@@ -9,5 +9,5 @@ urlpatterns = [
     path('api/logexport', views.LogCSVExportView.as_view()),
     path('api/logs/<int:rid>', views.RecordLogDetail.as_view()),
     path('api/login', views.Login.as_view()),
-    path('<str:persistent_path>', views.redirect_view),
+    path('<path:persistent_path>', views.redirect_view),
 ]
