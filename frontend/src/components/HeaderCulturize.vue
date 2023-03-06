@@ -69,8 +69,8 @@ const logout = () => {
   router.push({ name: "login" });
 }
 
-const logsdownload = () => {
-  store.logCSVDownload();
+const logsdownload = async () => {
+  await store.logCSVDownload();
 }
 
 const refresh = () => {

@@ -1,7 +1,23 @@
 <template>
   <div class="container-xl">
-    <button @click="prevPage" type="button" class="culturize btn btn-primary">Previous</button>
-    <button @click="nextPage" type="button" class="culturize btn btn-primary">Next</button>
+    <div>
+      <div style="text-align: center" class="my-2 col">
+        <button
+          @click="prevPage"
+          type="button"
+          class="mx-1 culturize btn btn-primary"
+        >
+          Previous
+        </button>
+        <button
+          @click="nextPage"
+          type="button"
+          class="mx-1 culturize btn btn-primary"
+        >
+          Next
+        </button>
+      </div>
+    </div>
 
     <table class="table table-hover">
       <thead>
@@ -64,5 +80,6 @@ function nextPage () {
 <style scoped>
 .culturize {
   background-color: #1CD2A7;
+  border-color: #1CD2A7;
 }
 </style>

@@ -105,9 +105,10 @@ export const useRecordsStore = defineStore("record", {
       this.serviceInfo = data;
     },
     async logCSVDownload() {
-      const data = await culturize_web.get<any>("logexport");
-      const blob = new Blob([data], {type: "text/csv"});
-      const link = document.createElement('a');
+      const resp = await culturize_web.get<any>("logexport", { responseAs: "response" });
+      const data = await resp.blob();
+      const blob = new Blob([data], { type: "text/csv" });
+      const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = "export.csv";
       link.click();
