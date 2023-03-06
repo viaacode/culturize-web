@@ -1,6 +1,16 @@
 <template>
   <div class="container">
     <h1>Record details</h1>
+    <div class="dropdown" style="padding-top: 0px; padding-right: 25px;">
+      <button class="culturize btn btn-primary dropdown-toggle float-end" type="button" id="dropdownMenuButton1"
+        data-bs-toggle="dropdown" aria-expanded="false">
+        Actions
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+        <li><a class="dropdown-item" @click="toggleEnable" href="#">Toggle enable</a></li>
+        <li><a class="dropdown-item" @click="removeRecord" href="#">Remove</a></li>
+      </ul>
+    </div>
     <table class="table table-hover">
       <tbody>
         <tr>
@@ -50,4 +60,20 @@ onMounted( async () => {
   state.recordLogs = recordStore.recordLogs[id];
 });
 
+const toggleEnable = () => {
+  const recordStore = useRecordsStore();
+  recordStore.toggleEnable(id);
+}
+
+const removeRecord = () => {
+  console.log("TODO remove");
+}
+
 </script>
+
+<style scoped>
+.culturize {
+  background-color: #1CD2A7;
+  border-color: #1CD2A7;
+}
+</style>

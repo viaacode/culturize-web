@@ -113,7 +113,15 @@ export const useRecordsStore = defineStore("record", {
       link.download = "export.csv";
       link.click();
       URL.revokeObjectURL(link.href);
+    },
+
+    async toggleEnable(id: string) {
+      this.record_details[id].enabled = !this.record_details[id].enabled;
+      const data = await culturize_web.put<CRecord>(`record/${id}`, this.record_details[id]);
+
+      this.record_details[id] = data;
     }
+
 
   },
 });
