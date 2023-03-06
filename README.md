@@ -81,13 +81,13 @@ The cultURIze API supports the following functions
 
 `curl -X POST https://culturize.web.example.com/api/record -d
 '[{"resource_url": "https://meemoo.be/kennisbanken", "persistent_url":
-"culturize.data/abc-123"}]' -H "Content-Type: Application/JSON" -H`
+"culturize.data/abc-123"}]' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
 
 **Add multiple records**
 
 `curl -X POST https://culturize.web.example.com/api/record -d
 '[{"resource_url": "https://meemoo.be/kennisbanken", "persistent_url":
-"culturize.data/abc-123"}, {“resource_url”: “https://example.com”, “persistent_url”: “culturize.data/123-abc”]' -H "Content-Type: Application/JSON" -H`
+"culturize.data/abc-123"}, {“resource_url”: “https://example.com”, “persistent_url”: “culturize.data/123-abc”]' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
 
 **Disable record**
 
