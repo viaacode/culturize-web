@@ -1,0 +1,17 @@
+# first stage builds vue
+FROM node:19-alpine AS build-stage
+WORKDIR /app
+COPY . .
+RUN npm ci
+RUN npm run build
+
+# second stage copies only the static dist files to nginx html dir
+
+FROM linuxserver/swag:2.2.0 AS prod
+
+RUN rm -rf /config/nginx/proxy-confs/*
+#RUN rm -rf /config/nginx/site-confs/*
+COPY nginx.swag.conf /config/nginx/site-confs/default.conf
+
+RUN mkdir -p /config/www/dashboard
+COPY --from=build-stage /app/dist /config/www/dashboard

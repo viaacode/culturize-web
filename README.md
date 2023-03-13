@@ -21,6 +21,12 @@ More information about inspiration, governance, and howto's for setting up a Cul
 
 #### Culturize Web Installation 
 
+We provide a setup script to do most of the configuration work. This can be started with ./setup.sh
+and asks some questions before generating the different config files. This setup can also handle the
+SSL setup by using Let's Encrypt for certificate management.
+
+A manual install is also possible by following the below steps:
+
 Make sure the server is configure with SSL to ensure communication to and from the webservice is secure.
 
 ##### Setting up
@@ -81,13 +87,13 @@ The cultURIze API supports the following functions
 
 `curl -X POST https://culturize.web.example.com/api/record -d
 '[{"resource_url": "https://meemoo.be/kennisbanken", "persistent_url":
-"culturize.data/abc-123"}]' -H "Content-Type: Application/JSON" -H`
+"culturize.data/abc-123"}]' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
 
 **Add multiple records**
 
 `curl -X POST https://culturize.web.example.com/api/record -d
 '[{"resource_url": "https://meemoo.be/kennisbanken", "persistent_url":
-"culturize.data/abc-123"}, {“resource_url”: “https://example.com”, “persistent_url”: “culturize.data/123-abc”]' -H "Content-Type: Application/JSON" -H`
+"culturize.data/abc-123"}, {“resource_url”: “https://example.com”, “persistent_url”: “culturize.data/123-abc”]' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
 
 **Disable record**
 
