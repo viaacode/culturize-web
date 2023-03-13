@@ -21,6 +21,12 @@ More information about inspiration, governance, and howto's for setting up a Cul
 
 #### Culturize Web Installation 
 
+We provide a setup script to do most of the configuration work. This can be started with ./setup.sh
+and asks some questions before generating the different config files. This setup can also handle the
+SSL setup by using Let's Encrypt for certificate management.
+
+A manual install is also possible by following the below steps:
+
 Make sure the server is configure with SSL to ensure communication to and from the webservice is secure.
 
 ##### Setting up
