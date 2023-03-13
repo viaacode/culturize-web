@@ -38,6 +38,9 @@ class RecordList(APIView):
         if key != access_key:
             return HttpResponse('Unauthorized', status=401)
         records = Record.objects.all().order_by("id")
+        search = request.query_params.get('search')
+        if search is not None and search != "":
+            records = records.filter(persistent_url__icontains=search)
         paginator = pagination.PageNumberPagination()
         result_page = paginator.paginate_queryset(records, request)
         serializer = RecordSerializer(result_page, many=True)

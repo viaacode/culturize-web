@@ -1,7 +1,7 @@
 <template>
   <div class="container-xl">
-    <div>
-      <div style="text-align: center" class="my-2 col">
+    <div class="w-100">
+      <div style="float: left; text-align: center" class="my-2 col w-75">
         <button
           @click="prevPage"
           type="button"
@@ -9,15 +9,6 @@
         >
           Previous
         </button>
-        <!--
-        <button
-          @click="prevPage"
-          type="button"
-          class="mx-1 culturize btn btn-primary"
-        >
-          1
-        </button>
-        -->
         <button
           @click="nextPage"
           type="button"
@@ -26,17 +17,15 @@
           Next
         </button>
       </div>
-      <!--
-      <div class="col-1">
+      <div style="float: right" class="col-1 w-25 my-2">
         <button
           @click="logsdownload"
           type="button"
-          class="mx-1 culturize btn btn-primary"
+          class="mx-1 btn btn-dark"
         >
-          Download
+          Download Logs
         </button>
       </div>
-      -->
     </div>
 
     <table class="table table-hover">
@@ -82,6 +71,11 @@ function nextPage () {
     handlePageChange(state.currentPage+1);
   }
 }
+
+const logsdownload = async () => {
+  await store.logCSVDownload();
+}
+
 </script>
 
 <style scoped>

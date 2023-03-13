@@ -55,6 +55,7 @@ export interface ServiceInfo {
 
 export const useRecordsStore = defineStore("record", {
   state: () => ({
+    search_string: "" as string,
     record_count: 0 as number,
     record_page_size: 0 as number,
     record_page: {} as PaginatedRecordMap,
@@ -68,13 +69,17 @@ export const useRecordsStore = defineStore("record", {
   actions: {
     // add page to fetch
     async fetch(page: number) {
-      const data = await culturize_web.get<PaginatedRecord>("record", {query: {"page": page}});
+      const data = await culturize_web.get<PaginatedRecord>("record", {query: {"page": page, "search": this.search_string}});
 
       this.record_count = data.count;
       this.record_page[page] = data;
       if (page == 1) {
         this.record_page_size = data.results.length;
       }
+    },
+    async searchRecord(search: string, page: number) {
+      this.search_string = search;
+      await this.fetch(page);
     },
     async fetchLogs(page: number) {
       const data = await culturize_web.get<PaginatedLog>("logs", {query: {"page": page}});

@@ -13,5 +13,5 @@ RUN rm -rf /config/nginx/proxy-confs/*
 #RUN rm -rf /config/nginx/site-confs/*
 COPY nginx.swag.conf /config/nginx/site-confs/default.conf
 
-RUN mkdir /config/www/dashboard
+RUN mkdir -p /config/www/dashboard
 COPY --from=build-stage /app/dist /config/www/dashboard

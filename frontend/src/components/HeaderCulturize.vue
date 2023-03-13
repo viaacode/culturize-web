@@ -36,7 +36,7 @@
           </li>
         </ul>
         <div class="d-flex btn-group" role="group" aria-label="Basic example">
-          <button class="btn btn-dark" type="submit" @click="logsdownload">Download Logs</button>
+          <!-- <button class="btn btn-dark" type="submit" @click="logsdownload">Download Logs</button> -->
           <button class="btn btn-dark" type="submit" @click="refresh">
             <i class="bi bi-arrow-counterclockwise"></i>
           </button>
