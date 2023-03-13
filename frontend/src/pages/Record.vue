@@ -1,6 +1,7 @@
 <template>
   <div class="container">
     <h1>Record details</h1>
+    <!--
     <div class="dropdown" style="padding-top: 0px; padding-right: 25px;">
       <button class="culturize btn btn-primary dropdown-toggle float-end" type="button" id="dropdownMenuButton1"
         data-bs-toggle="dropdown" aria-expanded="false">
@@ -11,6 +12,7 @@
         <li><a class="dropdown-item" @click="removeRecord" href="#">Remove</a></li>
       </ul>
     </div>
+    -->
     <table class="table table-hover">
       <tbody>
         <tr>
