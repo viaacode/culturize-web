@@ -69,6 +69,9 @@ volume to recreate the database with the correct credentials. You can list the d
 'docker volume ls' after you identified the database volume (will have db in it's name) you can
 remove it with 'docker volume rm <volume-name>'.
 
+##### Starting
+In the case culturize-web containers are down, use `docker-compose -f docker-compose.yml up -d` to start the containers. 
+
 
 ## API documentation:
 
