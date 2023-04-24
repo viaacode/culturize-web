@@ -32,12 +32,14 @@ Make sure the server is configure with SSL to ensure communication to and from t
 ##### Setting up
 
 * Clone this repo
-* Create a environment file called `.env.prod` in the root of the repository.
-* Copy paste this inside the `.env.prod` file. Replace "culturize" after `SQL_DATABASE=` and `SQL_PASSWORD=` with your own made up name and password. 
+* Create a environment file called `.env.web` in the root of the repository.
+* Copy paste this inside the `.env.web` file. Replace "culturize" after `SQL_DATABASE=` and `SQL_PASSWORD=` with your own made up name and password. Update the `DJANGO_ALLOWED_HOSTS` to contain the domain name.
+* **important**: replace the secret key in this file with a newly random generated key (it is used
+  internally and should be as random as possible)
 ```
-DEBUG=1
+DEBUG=0
 SECRET_KEY=ruWxpjmdysErePWRKEpckOCCefmIGp
-DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+DJANGO_ALLOWED_HOSTS=${domain_name}
 SQL_ENGINE=django.db.backends.postgresql
 SQL_DATABASE=culturize-web
 SQL_USER=culturize
@@ -46,22 +48,38 @@ SQL_HOST=db
 SQL_PORT=5432
 DATABASE=postgres
 ```
-* Create another file at the root of the repo `.env.prod.db`, make sure the username and password from `SQL_DATABASE=` and `SQL_PASSWORD=` are in sync with `POSTGRES_PASSWORD=` and `POSTGRES_DB=` from `.env.prod.`
+* Create another file at the root of the repo `.env.db`, make sure the username and password from `SQL_DATABASE=` and `SQL_PASSWORD=` are in sync with `POSTGRES_PASSWORD=` and `POSTGRES_DB=` from `.env.web`.
 ```
-POSTGRES_USER=TheSameUsernameAsYouUsedAtSQL_DATABASEin.env.prod
-POSTGRES_PASSWORD=TheSameUsernameAsYouUsedAtSQL_DATABASEin.env.prod
+POSTGRES_USER=TheSameUsernameAsYouUsedAtSQL_DATABASEin.env.web
+POSTGRES_PASSWORD=TheSameUsernameAsYouUsedAtSQL_DATABASEin.env.web
 POSTGRES_DB=culturize-web
 ```
-* Replace the default password in the "acceskey" file at 
-`culturize-web/app/culturizeweb/accesskey` to something else
+* The database is run in a seperate container with a docker named volume. Docker itself sets the
+  file location on the host for the named volume. Normally in `/var/lib/docker`.
+* Replace the default password in the "acceskey" file at `culturize-web/app/culturizeweb/accesskey`
+  to something else
+
+* if you want to handle TLS (HTTPS) encryption at this level then use the `swag` docker image:
+  `cp docker-compose.swag.yml docker-compose.yml`
+  You should also create the `.env.nginx` file with:
+  ```
+  VALIDATION=http
+  URL=${domain_name}
+  SUBDOMAINS=www
+  ```
+
+* if you handle TLS traffic somewhere else:
+  `cp docker-compose.nginx.yml docker-compose.yml`
+
 
 ##### Installing
+
 Run the two commands below to build and start the webservice.
-* `docker-compose -f docker-compose.prod.yml up -d --build`
-* `docker-compose -f docker-compose.prod.yml exec web python manage.py migrate --noinput`
+* `docker-compose up -d --build`
+* `docker-compose exec web python manage.py migrate --noinput`
 After installing running `docker-compose up -f` from the repo can be used to start the Culturize Webservice. 
 
-( If you get "Command 'docker-compose' not found..." you might not have installed Docker-compose or you have installed a newer version and you need to use `docker compose -f docker-compose.prod.yml up -d --build` and `docker compose -f docker-compose.prod.yml exec web python manage.py migrate --noinput` )
+( If you get "Command 'docker-compose' not found..." you might not have installed Docker-compose or you have installed a newer version and you need to use `docker compose up -d --build` and `docker compose exec web python manage.py migrate --noinput` )
 
 If you get unauthorized access on the last command (manage.py migrate) it can be that you first
 created the database container with the wrong credentials. You'll need to remove the attached docker
@@ -69,8 +87,14 @@ volume to recreate the database with the correct credentials. You can list the d
 'docker volume ls' after you identified the database volume (will have db in it's name) you can
 remove it with 'docker volume rm <volume-name>'.
 
-##### Starting
-In the case culturize-web containers are down, use `docker-compose -f docker-compose.yml up -d` to start the containers. 
+##### Upgrading
+
+To upgrade to the latest version you can do:
+```bash
+git pull # to fetch the latest changes
+docker-compose up -d --build # rebuild the images, but will use the same data set
+```
+
 
 
 ## API documentation:
