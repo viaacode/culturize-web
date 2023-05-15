@@ -57,11 +57,13 @@ export const useRecordsStore = defineStore("record", {
   state: () => ({
     search_string: "" as string,
     record_count: 0 as number,
-    record_page_size: 0 as number,
+    record_page_size: 100 as number,
     record_page: {} as PaginatedRecordMap,
+    record_page_count: 1 as number,
     record_details: {} as CRecordMap,
     log_count: 0 as number,
-    log_page_size: 0 as number,
+    log_page_size: 100 as number,
+    log_page_count: 1 as number,
     log_page: {} as PaginatedLogMap,
     recordLogs: {} as CRecordsLogsMap,
     serviceInfo: {} as ServiceInfo
@@ -76,6 +78,7 @@ export const useRecordsStore = defineStore("record", {
       if (page == 1) {
         this.record_page_size = data.results.length;
       }
+      this.record_page_count = Math.ceil(this.record_count / this.record_page_size);
     },
     async searchRecord(search: string, page: number) {
       this.search_string = search;
@@ -90,6 +93,7 @@ export const useRecordsStore = defineStore("record", {
       if (page == 1) {
         this.log_page_size = data.results.length;
       }
+      this.log_page_count = Math.ceil(this.log_count / this.log_page_size);
     },
     async fetchRecord(id: string) {
       const data = await culturize_web.get<CRecord>(`record/${id}`);
