@@ -5,6 +5,7 @@ urlpatterns = [
     path('api/info', views.ServiceInfo.as_view()),
     path('api/record', views.RecordList.as_view()),
     path('api/record/<int:rid>', views.RecordDetail.as_view()),
+    path('api/recordexport', views.RecordCSVExportView.as_view()),
     path('api/logs', views.LogList.as_view()),
     path('api/logexport', views.LogCSVExportView.as_view()),
     path('api/logs/<int:rid>', views.RecordLogDetail.as_view()),
