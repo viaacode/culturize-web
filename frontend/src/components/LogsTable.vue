@@ -93,8 +93,7 @@ function goToPage(i) {
 
 const logsdownload = async () => {
   await store.logCSVDownload();
-}
-
+};
 </script>
 
 <style scoped>

@@ -1,7 +1,7 @@
 <template>
   <div class="container-xl">
-    <div class="w-100">
-      <div style="float: left" class="my-2 col w-25 input-group">
+    <div class="w-100 row">
+      <div style="float: left" class="my-2 col-1 w-25 input-group">
         <input
           v-model="state.recordSearch"
           class="form-control border-end-0 border"
@@ -21,7 +21,7 @@
 
         <!-- <input type="search" class="form-control" id="recordSearch"> -->
       </div>
-      <div style="float: right; text-align: center" class="w-75 my-2 col">
+      <div style="float: right; text-align: center" class="w-50 my-2 col">
         <button
           v-for="n in state.pageNumbers"
           :key="n"
@@ -31,6 +31,15 @@
           class="mx-1 culturize btn btn-primary"
         >
           {{ n }}
+        </button>
+      </div>
+      <div style="float: right; text-align: center" class="col-6 w-25 my-2">
+        <button
+          @click="recordsdownload"
+          type="button"
+          class="mx-1 btn btn-dark"
+        >
+          Download Records
         </button>
       </div>
     </div>
@@ -121,6 +130,10 @@ function searchRecord() {
   console.log(state.recordSearch);
   store.searchRecord(state.recordSearch, 1);
 }
+
+const recordsdownload = async () => {
+  await store.recordCSVDownload();
+};
 </script>
 
 <style scoped>

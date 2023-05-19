@@ -119,11 +119,21 @@ export const useRecordsStore = defineStore("record", {
       const blob = new Blob([data], { type: "text/csv" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "export.csv";
+      link.download = "log-export.csv";
       link.click();
       URL.revokeObjectURL(link.href);
     },
 
+    async recordCSVDownload() {
+      const resp = await culturize_web.get<any>("recordexport", { responseAs: "response" });
+      const data = await resp.blob();
+      const blob = new Blob([data], { type: "text/csv" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "record-export.csv";
+      link.click();
+      URL.revokeObjectURL(link.href);
+    },
     async toggleEnable(id: string) {
       this.record_details[id].enabled = !this.record_details[id].enabled;
       const data = await culturize_web.put<CRecord>(`record/${id}`, this.record_details[id]);
