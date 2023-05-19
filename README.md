@@ -32,6 +32,8 @@ Make sure the server is configure with SSL to ensure communication to and from t
 ##### Setting up
 
 * Clone this repo
+  * This can be in a users home folder or somewhere like `/opt/docker` and create group permissions
+    so that the relevant users can access it without becoming root.
 * Create a environment file called `.env.web` in the root of the repository.
 * Copy paste this inside the `.env.web` file. Replace "culturize" after `SQL_DATABASE=` and `SQL_PASSWORD=` with your own made up name and password. Update the `DJANGO_ALLOWED_HOSTS` to contain the domain name.
 * **important**: replace the secret key in this file with a newly random generated key (it is used
