@@ -159,5 +159,5 @@ LOGOUT_REDIRECT_URL = "dashboard"
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 100
+    'PAGE_SIZE': 500
 }

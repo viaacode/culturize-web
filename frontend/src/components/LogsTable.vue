@@ -3,18 +3,14 @@
     <div class="w-100">
       <div style="float: left; text-align: center" class="my-2 col w-75">
         <button
-          @click="prevPage"
+          v-for="n in state.pageNumbers"
+          :key="n"
+          v-on:click="goToPage(n)"
+          v-bind:class="n === state.currentPage ? 'curpage' : ''"
           type="button"
           class="mx-1 culturize btn btn-primary"
         >
-          Previous
-        </button>
-        <button
-          @click="nextPage"
-          type="button"
-          class="mx-1 culturize btn btn-primary"
-        >
-          Next
+          {{ n }}
         </button>
       </div>
       <div style="float: right" class="col-1 w-25 my-2">
@@ -40,7 +36,8 @@
       <tbody>
         <tr
           v-for="log in store.log_page[state.currentPage].results"
-          :key="log.persistent_url">
+          :key="log.persistent_url"
+        >
           <td>{{ log.datetime }}</td>
           <td>{{ log.persistent_url }}</td>
           <td>{{ log.referer }}</td>
@@ -55,32 +52,56 @@ import { reactive, onMounted, ref } from "vue";
 import { useRecordsStore } from "@/stores/Records";
 const store = useRecordsStore();
 
-const state = reactive({ currentPage: 1})
+const state = reactive({ currentPage: 1, pageNumbers: [] });
+
+onMounted(() => {
+  updatePageNumbers();
+});
+
+function updatePageNumbers() {
+  if (store.log_page_count <= 7) {
+    let pageNumbers = [];
+    for (let i = 1; i <= store.log_page_count; i++) {
+      pageNumbers.push(i);
+    }
+    state.pageNumbers = pageNumbers;
+  } else {
+    let pageNumbers = [];
+    pageNumbers.push(1);
+    for (let i = state.currentPage - 2; i <= state.currentPage + 2; i++) {
+      if (i <= 1) {
+        continue;
+      }
+      if (i >= store.log_page_count) {
+        continue;
+      }
+      pageNumbers.push(i);
+    }
+  }
+}
 
 async function handlePageChange(page: number) {
   await store.fetchLogs(page);
   state.currentPage = page;
+  updatePageNumbers();
 }
-function prevPage () {
-  if (state.currentPage > 1) {
-    handlePageChange(state.currentPage-1);
-  }
-}
-function nextPage () {
-  if (state.currentPage * store.log_page_size < store.log_count) {
-    handlePageChange(state.currentPage+1);
+function goToPage(i) {
+  if (state.currentPage != i) {
+    handlePageChange(i);
   }
 }
 
 const logsdownload = async () => {
   await store.logCSVDownload();
-}
-
+};
 </script>
 
 <style scoped>
 .culturize {
   background-color: #1CD2A7;
   border-color: #1CD2A7;
+}
+.curpage {
+  color: #000000;
 }
 </style>

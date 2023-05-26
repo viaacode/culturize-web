@@ -57,11 +57,13 @@ export const useRecordsStore = defineStore("record", {
   state: () => ({
     search_string: "" as string,
     record_count: 0 as number,
-    record_page_size: 0 as number,
+    record_page_size: 100 as number,
     record_page: {} as PaginatedRecordMap,
+    record_page_count: 1 as number,
     record_details: {} as CRecordMap,
     log_count: 0 as number,
-    log_page_size: 0 as number,
+    log_page_size: 100 as number,
+    log_page_count: 1 as number,
     log_page: {} as PaginatedLogMap,
     recordLogs: {} as CRecordsLogsMap,
     serviceInfo: {} as ServiceInfo
@@ -76,6 +78,7 @@ export const useRecordsStore = defineStore("record", {
       if (page == 1) {
         this.record_page_size = data.results.length;
       }
+      this.record_page_count = Math.ceil(this.record_count / this.record_page_size);
     },
     async searchRecord(search: string, page: number) {
       this.search_string = search;
@@ -90,6 +93,7 @@ export const useRecordsStore = defineStore("record", {
       if (page == 1) {
         this.log_page_size = data.results.length;
       }
+      this.log_page_count = Math.ceil(this.log_count / this.log_page_size);
     },
     async fetchRecord(id: string) {
       const data = await culturize_web.get<CRecord>(`record/${id}`);
@@ -115,11 +119,21 @@ export const useRecordsStore = defineStore("record", {
       const blob = new Blob([data], { type: "text/csv" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "export.csv";
+      link.download = "log-export.csv";
       link.click();
       URL.revokeObjectURL(link.href);
     },
 
+    async recordCSVDownload() {
+      const resp = await culturize_web.get<any>("recordexport", { responseAs: "response" });
+      const data = await resp.blob();
+      const blob = new Blob([data], { type: "text/csv" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "record-export.csv";
+      link.click();
+      URL.revokeObjectURL(link.href);
+    },
     async toggleEnable(id: string) {
       this.record_details[id].enabled = !this.record_details[id].enabled;
       const data = await culturize_web.put<CRecord>(`record/${id}`, this.record_details[id]);

@@ -12,12 +12,14 @@ services:
       - ./.env.web
     depends_on:
       - db
+    restart: unless-stopped
   db:
     image: postgres:13.0-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./.env.db
+    restart: unless-stopped
   nginx:
     build:
       context: ./frontend
@@ -29,7 +31,7 @@ services:
       - web
     env_file:
       - ./.env.nginx
+    restart: unless-stopped
 
 volumes:
   postgres_data:
-  static_volume:

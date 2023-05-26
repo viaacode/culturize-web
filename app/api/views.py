@@ -121,13 +121,27 @@ class RecordLogDetail(APIView):
             return HttpResponse('Unauthorized', status=401)
         return Response({"click_count": self.get_record_log_count(rid)})
 
+class RecordCSVExportView(APIView):
+    def get(self, request, *args, **kwargs):
+        key = request.META.get("HTTP_CULTURIZE_KEY")
+        if key != access_key:
+            return HttpResponse('Unauthorized', status=401)
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = 'attachment; filename="records-export.csv"'
+        writer = csv.writer(response)
+
+        for record in Record.objects.all():
+            row = [record.resource_url, record.persistent_url, str(record.enabled)]
+            writer.writerow(row)
+        return response
+
 class LogCSVExportView(APIView):
     def get(self, request, *args, **kwargs):
         key = request.META.get("HTTP_CULTURIZE_KEY")
         if key != access_key:
             return HttpResponse('Unauthorized', status=401)
         response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = 'attachment; filename="export.csv"'
+        response["Content-Disposition"] = 'attachment; filename="logs-export.csv"'
         writer = csv.writer(response)
 
         for log in RequestLog.objects.all():

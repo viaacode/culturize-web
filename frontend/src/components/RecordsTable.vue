@@ -1,7 +1,7 @@
 <template>
   <div class="container-xl">
-    <div class="w-100">
-      <div style="float: left" class="my-2 col w-25 input-group">
+    <div class="w-100 row">
+      <div style="float: left" class="my-2 col-1 w-25 input-group">
         <input
           v-model="state.recordSearch"
           class="form-control border-end-0 border"
@@ -21,20 +21,25 @@
 
         <!-- <input type="search" class="form-control" id="recordSearch"> -->
       </div>
-      <div style="float: right; text-align: center" class="w-75 my-2 col">
+      <div style="float: right; text-align: center" class="w-50 my-2 col">
         <button
-          @click="prevPage"
+          v-for="n in state.pageNumbers"
+          :key="n"
+          v-on:click="goToPage(n)"
+          v-bind:class="n === state.currentPage ? 'curpage' : ''"
           type="button"
           class="mx-1 culturize btn btn-primary"
         >
-          Previous
+          {{ n }}
         </button>
+      </div>
+      <div style="float: right; text-align: center" class="col-6 w-25 my-2">
         <button
-          @click="nextPage"
+          @click="recordsdownload"
           type="button"
-          class="mx-1 culturize btn btn-primary"
+          class="mx-1 btn btn-dark"
         >
-          Next
+          Download Records
         </button>
       </div>
     </div>
@@ -79,31 +84,64 @@ import { reactive, onMounted, ref } from "vue";
 import { useRecordsStore } from "@/stores/Records";
 const store = useRecordsStore();
 
-const state = reactive({ currentPage: 1, recordSearch: store.search_string})
+const state = reactive({ currentPage: 1, pageNumbers: [], recordSearch: store.search_string})
+
+onMounted(() => {
+  updatePageNumbers();
+});
+
+function updatePageNumbers() {
+  console.log(store.record_page_count);
+  console.log(store.record_count);
+  console.log(store.record_page_size);
+  if (store.record_page_count <= 7) {
+    let pageNumbers = [];
+    for (let i = 1; i <= store.record_page_count; i++) {
+      pageNumbers.push(i);
+    }
+    state.pageNumbers = pageNumbers;
+  } else {
+    let pageNumbers = [];
+    pageNumbers.push(1);
+    for (let i = state.currentPage - 2; i <= state.currentPage + 2; i++) {
+      if (i <= 1) {
+        continue;
+      }
+      if (i >= store.record_page_count) {
+        continue;
+      }
+      pageNumbers.push(i);
+    }
+  }
+}
 
 async function handlePageChange(page: number) {
   await store.fetch(page);
   state.currentPage = page;
+  updatePageNumbers();
 }
-function prevPage() {
-  if (state.currentPage > 1) {
-    handlePageChange(state.currentPage - 1);
-  }
-}
-function nextPage() {
-  if (state.currentPage * store.record_page_size < store.record_count) {
-    handlePageChange(state.currentPage + 1);
+
+function goToPage(i) {
+  if (state.currentPage != i) {
+    handlePageChange(i);
   }
 }
 function searchRecord() {
   console.log(state.recordSearch);
   store.searchRecord(state.recordSearch, 1);
 }
+
+const recordsdownload = async () => {
+  await store.recordCSVDownload();
+};
 </script>
 
 <style scoped>
 .culturize {
   background-color: #1CD2A7;
   border-color: #1CD2A7;
+}
+.curpage {
+  color: #000000;
 }
 </style>
