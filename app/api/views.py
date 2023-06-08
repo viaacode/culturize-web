@@ -130,6 +130,7 @@ class RecordCSVExportView(APIView):
         response["Content-Disposition"] = 'attachment; filename="records-export.csv"'
         writer = csv.writer(response)
 
+        writer.writerow(["resource url", "peristent url", "enabled"])
         for record in Record.objects.all():
             row = [record.resource_url, record.persistent_url, str(record.enabled)]
             writer.writerow(row)
@@ -144,6 +145,7 @@ class LogCSVExportView(APIView):
         response["Content-Disposition"] = 'attachment; filename="logs-export.csv"'
         writer = csv.writer(response)
 
+        writer.writerow(["datetime", "peristent url", "referer"])
         for log in RequestLog.objects.all():
             row = [log.datetime.isoformat(), log.record.persistent_url, str(log.referer)]
             writer.writerow(row)

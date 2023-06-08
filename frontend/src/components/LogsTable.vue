@@ -52,7 +52,7 @@ import { reactive, onMounted, ref } from "vue";
 import { useRecordsStore } from "@/stores/Records";
 const store = useRecordsStore();
 
-const state = reactive({ currentPage: 1, pageNumbers: [] });
+const state = reactive({ currentPage: 1, pageNumbers: [1] });
 
 onMounted(() => {
   updatePageNumbers();
@@ -85,7 +85,7 @@ async function handlePageChange(page: number) {
   state.currentPage = page;
   updatePageNumbers();
 }
-function goToPage(i) {
+function goToPage(i: number) {
   if (state.currentPage != i) {
     handlePageChange(i);
   }
