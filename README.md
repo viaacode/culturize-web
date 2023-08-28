@@ -1,7 +1,8 @@
 # CultURIze-Web
 
 
-![logo-culturize-klei-web](https://user-images.githubusercontent.com/14292591/174084481-574397a4-d54b-4359-af57-546eb811b8c1.png)
+![20230726-meemoo-logo-culturize-web](https://github.com/viaacode/culturize-web/assets/14292591/31523e53-1dd4-4647-a6e9-5788eac1c12a)
+
 
 This is the GitHub repository for CultURIze webservice.
 
