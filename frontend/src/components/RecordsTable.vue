@@ -126,9 +126,10 @@ function goToPage(i: number) {
     handlePageChange(i);
   }
 }
-function searchRecord() {
+
+async function searchRecord() {
   console.log(state.recordSearch);
-  store.searchRecord(state.recordSearch, 1);
+  await store.searchRecord(state.recordSearch, 1);
   updatePageNumbers();
 }
 

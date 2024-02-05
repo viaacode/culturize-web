@@ -78,7 +78,11 @@ export const useRecordsStore = defineStore("record", {
       if (page == 1) {
         this.record_page_size = data.results.length;
       }
-      this.record_page_count = Math.ceil(this.record_count / this.record_page_size);
+      if (this.record_count == 0) {
+        this.record_page_count = 1;
+      } else {
+        this.record_page_count = Math.ceil(this.record_count / this.record_page_size);
+      }
     },
     async searchRecord(search: string, page: number) {
       this.search_string = search;
