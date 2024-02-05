@@ -129,6 +129,7 @@ function goToPage(i: number) {
 function searchRecord() {
   console.log(state.recordSearch);
   store.searchRecord(state.recordSearch, 1);
+  updatePageNumbers();
 }
 
 const recordsdownload = async () => {
