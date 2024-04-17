@@ -14,8 +14,9 @@
             @click="searchRecord"
             class="btn btn-outline-secondary bg-white border-start-0 border ms-n5"
             type="button"
+            id="search-button"
           >
-            <i class="bi bi-search"></i>
+            <i class="bi bi-search" ></i>
           </button>
         </span>
 
@@ -145,5 +146,8 @@ const recordsdownload = async () => {
 }
 .curpage {
   color: #000000;
+}
+#search-button:hover {
+    color: #808080;
 }
 </style>
