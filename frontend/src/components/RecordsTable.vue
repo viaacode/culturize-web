@@ -14,8 +14,9 @@
             @click="searchRecord"
             class="btn btn-outline-secondary bg-white border-start-0 border ms-n5"
             type="button"
+            id="search-button"
           >
-            <i class="bi bi-search"></i>
+            <i class="bi bi-search" ></i>
           </button>
         </span>
 
@@ -91,9 +92,6 @@ onMounted(() => {
 });
 
 function updatePageNumbers() {
-  console.log(store.record_page_count);
-  console.log(store.record_count);
-  console.log(store.record_page_size);
   if (store.record_page_count <= 7) {
     let pageNumbers = [];
     for (let i = 1; i <= store.record_page_count; i++) {
@@ -103,15 +101,23 @@ function updatePageNumbers() {
   } else {
     let pageNumbers = [];
     pageNumbers.push(1);
-    for (let i = state.currentPage - 2; i <= state.currentPage + 2; i++) {
-      if (i <= 1) {
-        continue;
-      }
-      if (i >= store.record_page_count) {
-        continue;
-      }
+    let start = 2;
+    let end = store.record_page_count - 1;
+    if (state.currentPage >= start + 2 && state.currentPage <= end - 2) {
+        start = state.currentPage - 2;
+        end = state.currentPage + 2;
+    } else if (state.currentPage >= start + 2) {
+        // state.currentPage > end - 2 => shift start
+        start = end - 4
+    } else {
+        // state.currentPage < start + 2 => shift end
+        end = start + 4 // 6
+    }
+    for (let i = start; i <= end; i++) {
       pageNumbers.push(i);
     }
+    pageNumbers.push(store.record_page_count);
+    state.pageNumbers = pageNumbers;
   }
 }
 
@@ -126,9 +132,11 @@ function goToPage(i: number) {
     handlePageChange(i);
   }
 }
-function searchRecord() {
+
+async function searchRecord() {
   console.log(state.recordSearch);
-  store.searchRecord(state.recordSearch, 1);
+  await store.searchRecord(state.recordSearch, 1);
+  updatePageNumbers();
 }
 
 const recordsdownload = async () => {
@@ -143,5 +151,8 @@ const recordsdownload = async () => {
 }
 .curpage {
   color: #000000;
+}
+#search-button:hover {
+    color: #808080;
 }
 </style>

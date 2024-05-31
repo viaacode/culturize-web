@@ -21,6 +21,12 @@
             {{ state.serviceInfo.click_count }}
           </td>
         </tr>
+        <tr>
+          <th scope="row">CultURIze-web version</th>
+          <td>
+            v1.1
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
