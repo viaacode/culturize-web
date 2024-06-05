@@ -138,4 +138,13 @@ When the Webservice has activated a persistent URI, it produces a respons
 `[{"resource_url":"https://meemoo.be/kennisbanken","persistent_url":"culturize.data/abc-123"}]l`
 
 
+## License
+CC BY-SA 4.0 meemoo / Open Summer of Code
+
+All content in this repository is released under the [CC-BY-SA License](https://creativecommons.org/licenses/by-sa/4.0/).
+
+The code of CultURIze is released under the [MIT License](https://opensource.org/licenses/MIT).
+
+
+
 
