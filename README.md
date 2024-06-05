@@ -139,7 +139,7 @@ When the Webservice has activated a persistent URI, it produces a respons
 
 
 ## License
-CC BY-SA 4.0 meemoo / Open Summer of Code
+CC BY-SA 4.0 meemoo 
 
 All content in this repository is released under the [CC-BY-SA License](https://creativecommons.org/licenses/by-sa/4.0/).
 
