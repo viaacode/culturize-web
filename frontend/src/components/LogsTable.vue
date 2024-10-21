@@ -68,15 +68,23 @@ function updatePageNumbers() {
   } else {
     let pageNumbers = [];
     pageNumbers.push(1);
-    for (let i = state.currentPage - 2; i <= state.currentPage + 2; i++) {
-      if (i <= 1) {
-        continue;
-      }
-      if (i >= store.log_page_count) {
-        continue;
-      }
+    let start = 2;
+    let end = store.log_page_count - 1;
+    if (state.currentPage >= start + 2 && state.currentPage <= end - 2) {
+        start = state.currentPage - 2;
+        end = state.currentPage + 2;
+    } else if (state.currentPage >= start + 2) {
+        // state.currentPage > end - 2 => shift start
+        start = end - 4
+    } else {
+        // state.currentPage < start + 2 => shift end
+        end = start + 4 // 6
+    }
+    for (let i = start; i <= end; i++) {
       pageNumbers.push(i);
     }
+    pageNumbers.push(store.log_page_count);
+    state.pageNumbers = pageNumbers;
   }
 }
 
