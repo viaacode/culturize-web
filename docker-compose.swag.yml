@@ -13,6 +13,26 @@ services:
     depends_on:
       - db
     restart: unless-stopped
+  celery:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.prod
+    command: celery -A culturizeweb worker --loglevel=info --concurrency 1 -E
+    env_file:
+      - ./.env.web
+    depends_on:
+      - db
+    volumes:
+      - export_data:/export-data
+  beat:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.prod
+    command: celery -A culturizeweb beat --loglevel=info
+    env_file:
+      - ./.env.web
+    depends_on:
+      - db
   db:
     image: postgres:13.0-alpine
     volumes:
@@ -32,6 +52,16 @@ services:
     env_file:
       - ./.env.nginx
     restart: unless-stopped
+  redis:
+    image: redis/redis-stack-server:latest
+    #ports:
+    #  - 6379:6379
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+    volumes:
+      - redis_data:/data
 
 volumes:
   postgres_data:
+  redis_data:
+  export_data:
