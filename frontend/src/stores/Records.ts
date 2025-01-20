@@ -50,6 +50,10 @@ export interface ServiceInfo {
   record_count: number;
   enabled_count: number;
   click_count: number;
+  last_record_export: string;
+  last_record_export_filename: string;
+  last_log_export: string;
+  last_log_export_filename: string;
 }
 
 
@@ -66,7 +70,11 @@ export const useRecordsStore = defineStore("record", {
     log_page_count: 1 as number,
     log_page: {} as PaginatedLogMap,
     recordLogs: {} as CRecordsLogsMap,
-    serviceInfo: {} as ServiceInfo
+    serviceInfo: {} as ServiceInfo,
+    recordExporting: false as boolean,
+    logExporting: false as boolean,
+    recordIntervalID: 0 as number,
+    logIntervalID: 0 as number
   }),
   actions: {
     // add page to fetch
@@ -117,27 +125,43 @@ export const useRecordsStore = defineStore("record", {
 
       this.serviceInfo = data;
     },
-    async logCSVDownload() {
+    async triggerLogExport() {
       const resp = await culturize_web.get<any>("logexport", { responseAs: "response" });
-      const data = await resp.blob();
-      const blob = new Blob([data], { type: "text/csv" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "log-export.csv";
-      link.click();
-      URL.revokeObjectURL(link.href);
+      this.logExporting = true;
+      this.logIntervalID = setInterval(this.waitForNewExport, 2000, "log");
+      console.log(resp);
     },
 
-    async recordCSVDownload() {
+    async triggerRecordExport() {
       const resp = await culturize_web.get<any>("recordexport", { responseAs: "response" });
-      const data = await resp.blob();
-      const blob = new Blob([data], { type: "text/csv" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "record-export.csv";
-      link.click();
-      URL.revokeObjectURL(link.href);
+      this.recordExporting = true;
+      this.recordIntervalID = setInterval(this.waitForNewExport, 2000, "record");
+      console.log(resp);
     },
+
+    waitForNewExport(category: string) {
+      const prom = culturize_web.get<ServiceInfo>("info");
+      
+      prom.then((data) => {
+        if (category === "record") {
+            if (data.last_record_export != this.serviceInfo.last_record_export) {
+                // cancel interval call
+                this.serviceInfo = data;
+                this.recordExporting = false;
+                clearInterval(this.recordIntervalID);
+            }
+        }
+        if (category === "log") {
+            if (data.last_log_export != this.serviceInfo.last_log_export) {
+                // cancel interval call
+                this.serviceInfo = data;
+                this.logExporting = false;
+                clearInterval(this.logIntervalID);
+            }
+        }
+      });
+    },
+
     async toggleEnable(id: string) {
       this.record_details[id].enabled = !this.record_details[id].enabled;
       const data = await culturize_web.put<CRecord>(`record/${id}`, this.record_details[id]);

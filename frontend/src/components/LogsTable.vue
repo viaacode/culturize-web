@@ -15,11 +15,26 @@
       </div>
       <div style="float: right" class="col-1 w-25 my-2">
         <button
-          @click="logsdownload"
+          @click="triggerLogsExport"
           type="button"
           class="mx-1 btn btn-dark"
+          title="Generate new log export"
         >
-          Download Logs
+          <template v-if="!store.logExporting">
+              Generate
+          </template>
+          <template v-else>
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Generating
+          </template>
+        </button>
+        <button
+          @click="downloadLogsExport"
+          type="button"
+          class="mx-1 btn btn-dark"
+          :title="store.serviceInfo.last_log_export"
+        >
+          Download
         </button>
       </div>
     </div>
@@ -99,8 +114,19 @@ function goToPage(i: number) {
   }
 }
 
-const logsdownload = async () => {
-  await store.logCSVDownload();
+const triggerLogsExport = async () => {
+  await store.triggerLogExport();
+};
+
+const downloadLogsExport = async () => {
+    if (store.serviceInfo.last_log_export_filename !== "") {
+        const link = document.createElement('a');
+        link.href = "/sttc/" + store.serviceInfo.last_log_export_filename;
+        link.download = store.serviceInfo.last_log_export_filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 };
 </script>
 
