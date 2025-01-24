@@ -2,3 +2,4 @@ venv/
 *.pyc
 docker-compose.yml
 .env*
+app/culturizeweb/accesskey
