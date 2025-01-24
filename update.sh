@@ -32,9 +32,9 @@ echo "Stopping currently running containers"
 docker-compose down
 
 if [[ "$CURRENT_SETUP" == "swag" ]]; then
-    cp docker-compose.nginx.yml docker-compose.yml
-else
     cp docker-compose.swag.yml docker-compose.yml
+else
+    cp docker-compose.nginx.yml docker-compose.yml
 fi
 
 echo "starting new containers"
