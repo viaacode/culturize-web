@@ -12,6 +12,8 @@ CultURIze webservice is an automated workflow to create and activate persistent 
 
 The cultURIze webservice has been built as a multi container docker application. It’s a python django application running inside a container, with a containerised database (PostGreSQL) and nginx as reverse proxy in front of the django application to serve static files. The django application provides multiple endpoints that are linked to different functionalities in the application and all accept JSON data as input.
 
+To support generating data exports in the backgroud 2 celery containers and a redis container were added. Celery is a widely used python scheduling framework. It allows us to trigger a export generation with an API call and retreive the result when it's finished. This export generation is scheduled by celery beat to run every night for both records and logs. Also a cleanup job is run every night after the export to only keep the last 3 export file on the filesystem.
+
 
 ## Getting Started
 
@@ -95,7 +97,7 @@ remove it with 'docker volume rm <volume-name>'.
 To upgrade to the latest version you can do:
 ```bash
 git pull # to fetch the latest changes
-docker-compose up -d --build # rebuild the images, but will use the same data set
+bash ./update.sh # rebuilds the images, but will use the same data set
 ```
 
 
