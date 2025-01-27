@@ -51,6 +51,8 @@ services:
       - web
     volumes:
       - export_data:/export-data
+    env_file:
+      - ./.env.nginx
     restart: unless-stopped
   redis:
     image: redis/redis-stack-server:latest
