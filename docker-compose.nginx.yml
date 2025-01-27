@@ -6,8 +6,6 @@ services:
       context: ./app
       dockerfile: Dockerfile.prod
     command: gunicorn culturizeweb.wsgi:application --bind 0.0.0.0:8000
-    expose:
-      - 8000
     env_file:
       - ./.env.web
     depends_on:
@@ -24,6 +22,7 @@ services:
       - db
     volumes:
       - export_data:/export-data
+    restart: unless-stopped
   beat:
     build:
       context: ./app
@@ -33,6 +32,7 @@ services:
       - ./.env.web
     depends_on:
       - db
+    restart: unless-stopped
   db:
     image: postgres:13.0-alpine
     volumes:
@@ -48,15 +48,16 @@ services:
       - 127.0.0.1:9000:80
     depends_on:
       - web
+    volumes:
+      - export_data:/export-data
     restart: unless-stopped
   redis:
     image: redis/redis-stack-server:latest
-    #ports:
-    #  - 6379:6379
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
     volumes:
       - redis_data:/data
+    restart: unless-stopped
 
 volumes:
   postgres_data:
