@@ -2,8 +2,8 @@ from django.db import models
 
 
 class Record(models.Model):
-    resource_url = models.URLField()
-    persistent_url = models.CharField(max_length=100, unique=True)
+    resource_url = models.URLField(max_length=500)
+    persistent_url = models.CharField(max_length=500, unique=True)
     enabled = models.BooleanField(default=True)
 
     def __str__(self):
