@@ -117,9 +117,15 @@ The cultURIze API supports the following functions
 
 **Add record**
 
-`curl -X POST https://culturize.web.example.com/api/record -d
-'[{"resource_url": "https://meemoo.be/kennisbanken", "persistent_url":
-"culturize.data/abc-123"}]' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
+- please note that the persistent_url only contains the base domain and the path, not the https:// part.
+- the resource url is the full url description
+```
+curl -X POST https://culturize.web.example.com/api/record -d '{\
+  "resource_url": "https://meemoo.be/kennisbanken", \
+  "persistent_url": "culturize.data/abc-123"\
+}'\
+-H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"
+```
 
 **Add multiple records**
 
@@ -131,6 +137,7 @@ The cultURIze API supports the following functions
 
 - change disable state of a record
 `curl -X PUT https://culturize.web.example.com/api/record -d '{"persistent_url": "culturize.data/abc-123", "enabled": false}' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
+
 `curl -X PUT https://culturize.web.example.com/api/record -d '{"persistent_url": "culturize.data/abc-123", "enabled": false}' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
 - the response will be the update record object as it is stored in the server database: it contains the persistent url, the resource urls, the enabled state and a database id.
 
