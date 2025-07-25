@@ -76,6 +76,21 @@ class RecordList(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def put(self, request, format=None):
+        key = request.META.get("HTTP_CULTURIZE_KEY")
+        if key != access_key:
+            return HttpResponse('Unauthorized', status=401)
+        data = request.data
+        try:
+            instance = Record.objects.get(persistent_url=data["persistent_url"])
+        except Record.DoesNotExist:
+            raise Http404
+        serializer = RecordSerializer(instance, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class RecordDetail(APIView):
     def get_record(self, rid):
         try:
