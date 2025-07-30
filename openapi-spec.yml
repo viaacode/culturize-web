@@ -35,6 +35,39 @@ paths:
                     type: string
                   persistent_url:
                     type: string
+                  enabled:
+                    type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resource_url:
+                    type: string
+                  persistent_url:
+                    type: string
+        "405":
+          description: "Invalid input"
+    put:
+      tags:
+      - "api"
+      summary: "update a record"
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                  resource_url:
+                    type: string
+                  persistent_url:
+                    type: string
+                  enabled:
+                    type: boolean
       responses:
         "200":
           description: OK

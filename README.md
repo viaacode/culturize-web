@@ -112,8 +112,7 @@ The cultURIze API supports the following functions
 
 **List all records**
 
-`curl -s https://culturize.web.example.com/api/record -H
-"Culturize-Key: meemoosecretbeerstash"`
+`curl -s https://culturize.web.example.com/api/record -H "Culturize-Key: meemoosecretbeerstash"`
 
 **Add record**
 
@@ -127,30 +126,58 @@ curl -X POST https://culturize.web.example.com/api/record -d '{\
 -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"
 ```
 
+When the Webservice has activated a persistent URI, it produces a respons
+
+`[{"resource_url":"https://meemoo.be/kennisbanken","persistent_url":"culturize.data/abc-123"}]l`
+
 **Add multiple records**
 
-`curl -X POST https://culturize.web.example.com/api/record -d
-'[{"resource_url": "https://meemoo.be/kennisbanken", "persistent_url":
-"culturize.data/abc-123"}, {“resource_url”: “https://example.com”, “persistent_url”: “culturize.data/123-abc”]' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
+```
+curl -X POST https://culturize.web.example.com/api/record -d '[\
+  {\
+    "resource_url": "https://meemoo.be/kennisbanken",\
+    "persistent_url": "culturize.data/abc-123"\
+  }, {\
+    “resource_url”: “https://example.com”,\
+    “persistent_url”: “culturize.data/123-abc”\
+  }\
+]' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
+```
 
 **Update record**
 
-- change disable state of a record
-`curl -X PUT https://culturize.web.example.com/api/record -d '{"persistent_url": "culturize.data/abc-123", "enabled": false}' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
+- change disable state of a record, the persistent_url is the key identifier in
+  the database. For obvious reasons this can not be changed, and should always be
+  provided to identify the record. (remember: the persistent url should not contain the https:// part)
+```
+curl -X PUT https://culturize.web.example.com/api/record -d '{\
+  "persistent_url": "culturize.data/abc-123",\
+  "enabled": false\
+}' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"
+```
 
-`curl -X PUT https://culturize.web.example.com/api/record -d '{"persistent_url": "culturize.data/abc-123", "enabled": false}' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
-- the response will be the update record object as it is stored in the server database: it contains the persistent url, the resource urls, the enabled state and a database id.
+```
+curl -X PUT https://culturize.web.example.com/api/record -d '{\
+  "persistent_url": "culturize.data/abc-123",\
+  "enabled": false\
+}' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"
+```
+- the response will be the update record object as it is stored in the server
+  database: it contains the persistent url, the resource urls, the enabled state
+  and a database id.
 
 - change resource URL
-`curl -X PUT https://culturize.web.example.com/api/record -d '{"persistent_url": "culturize.data/abc-123", "resource_url": "https://example.com/newpart"}' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
+```
+curl -X PUT https://culturize.web.example.com/api/record -d '{\
+  "persistent_url": "culturize.data/abc-123",\
+  "resource_url": "https://example.com/newpart"\
+}' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"
+```
 
 **Print logs**
 
 `curl -s https://culturize.douwe.linuxbe.com/api/logs --header "Culturize-Key: meemoosecretbeerstash"`
 
-When the Webservice has activated a persistent URI, it produces a respons
-
-`[{"resource_url":"https://meemoo.be/kennisbanken","persistent_url":"culturize.data/abc-123"}]l`
 
 
 
