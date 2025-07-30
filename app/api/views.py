@@ -13,9 +13,10 @@ import json
 import logging
 
 
-from api.models import Record, RequestLog
+from api.models import Record, RequestLog, Export
 from api.serializers import RecordSerializer, RequestLogSerializer, RecordRequestLogSerializer
 from api.util import access_key
+from api.tasks import export_records, export_logs, cleanup
 
 logger = logging.getLogger("django")
 
@@ -25,10 +26,25 @@ class ServiceInfo(APIView):
         if key != access_key:
             return HttpResponse('Unauthorized', status=401)
         service_info = {}
-        service_info["record_count"] = Record.objects.count()
-        service_info["enabled_count"] = Record.objects.filter(enabled=True).count()
+        count = Record.objects.count()
+        service_info["record_count"] = count
+        # we add a partial index on enabled field == False to allow fast count of disabled rows
+        service_info["enabled_count"] = count - Record.objects.filter(enabled=False).count()
         service_info["click_count"] = RequestLog.objects.count()
-        #general_data["base_url"] = ""
+        record_export = Export.objects.filter(export_type="R").last()
+        if record_export:
+            service_info["last_record_export"] = record_export.datetime
+            service_info["last_record_export_filename"] = record_export.filename
+        else:
+            service_info["last_record_export"] = ""
+            service_info["last_record_export_filename"] = ""
+        log_export = Export.objects.filter(export_type="L").last()
+        if log_export:
+            service_info["last_log_export"] = log_export.datetime
+            service_info["last_log_export_filename"] = log_export.filename
+        else:
+            service_info["last_log_export"] = ""
+            service_info["last_log_export_filename"] = ""
 
         return Response(service_info)
 
@@ -58,6 +74,21 @@ class RecordList(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, format=None):
+        key = request.META.get("HTTP_CULTURIZE_KEY")
+        if key != access_key:
+            return HttpResponse('Unauthorized', status=401)
+        data = request.data
+        try:
+            instance = Record.objects.get(persistent_url=data["persistent_url"])
+        except Record.DoesNotExist:
+            raise Http404
+        serializer = RecordSerializer(instance, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class RecordDetail(APIView):
@@ -126,31 +157,24 @@ class RecordCSVExportView(APIView):
         key = request.META.get("HTTP_CULTURIZE_KEY")
         if key != access_key:
             return HttpResponse('Unauthorized', status=401)
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = 'attachment; filename="records-export.csv"'
-        writer = csv.writer(response)
-
-        writer.writerow(["resource url", "peristent url", "enabled"])
-        for record in Record.objects.all():
-            row = [record.resource_url, record.persistent_url, str(record.enabled)]
-            writer.writerow(row)
-        return response
+        export_records.delay()
+        return Response(status=202)
 
 class LogCSVExportView(APIView):
     def get(self, request, *args, **kwargs):
         key = request.META.get("HTTP_CULTURIZE_KEY")
         if key != access_key:
             return HttpResponse('Unauthorized', status=401)
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = 'attachment; filename="logs-export.csv"'
-        writer = csv.writer(response)
+        export_logs.delay()
+        return Response(status=202)
 
-        writer.writerow(["datetime", "peristent url", "referer"])
-        for log in RequestLog.objects.all():
-            row = [log.datetime.isoformat(), log.record.persistent_url, str(log.referer)]
-            writer.writerow(row)
-        return response
-
+class CleanupView(APIView):
+    def get(self, request, *args, **kwargs):
+        key = request.META.get("HTTP_CULTURIZE_KEY")
+        if key != access_key:
+            return HttpResponse('Unauthorized', status=401)
+        cleanup.delay()
+        return Response(status=202)
 
 class Login(APIView):
     def post(self, request, format=None):

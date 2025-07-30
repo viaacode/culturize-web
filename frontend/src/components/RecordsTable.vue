@@ -36,11 +36,27 @@
       </div>
       <div style="float: right; text-align: center" class="col-6 w-25 my-2">
         <button
-          @click="recordsdownload"
+          @click="triggerRecordsExport"
           type="button"
           class="mx-1 btn btn-dark"
+          title="Generate new records export"
         >
-          Download Records
+          <template v-if="!store.recordExporting">
+              Generate
+          </template>
+          <template v-else>
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Generating
+          </template>
+  
+        </button>
+        <button
+          @click="downloadRecordsExport"
+          type="button"
+          class="mx-1 btn btn-dark"
+                    :title="store.serviceInfo.last_record_export"
+        >
+          Download
         </button>
       </div>
     </div>
@@ -85,10 +101,13 @@ import { reactive, onMounted, ref } from "vue";
 import { useRecordsStore } from "@/stores/Records";
 const store = useRecordsStore();
 
-const state = reactive({ currentPage: 1, pageNumbers: [1], recordSearch: store.search_string})
+const state = reactive({ currentPage: 1,
+    pageNumbers: [1],
+    recordSearch: store.search_string})
 
 onMounted(() => {
   updatePageNumbers();
+    console.log(store.serviceInfo);
 });
 
 function updatePageNumbers() {
@@ -139,8 +158,19 @@ async function searchRecord() {
   updatePageNumbers();
 }
 
-const recordsdownload = async () => {
-  await store.recordCSVDownload();
+const triggerRecordsExport = async () => {
+  await store.triggerRecordExport();
+};
+
+const downloadRecordsExport = async () => {
+    if (store.serviceInfo.last_record_export_filename !== "") {
+        const link = document.createElement('a');
+        link.href = "/sttc/" + store.serviceInfo.last_record_export_filename;
+        link.download = store.serviceInfo.last_record_export_filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 };
 </script>
 

@@ -11,4 +11,6 @@ then
     echo "PostgreSQL started"
 fi
 
+echo "starting with command: " "$@"
+
 exec "$@"

@@ -13,6 +13,8 @@ CultURIze webservice is an automated workflow to create and activate persistent 
 
 The cultURIze webservice has been built as a multi container docker application. It’s a python django application running inside a container, with a containerised database (PostGreSQL) and nginx as reverse proxy in front of the django application to serve static files. The django application provides multiple endpoints that are linked to different functionalities in the application and all accept JSON data as input.
 
+To support generating data exports in the backgroud 2 celery containers and a redis container were added. Celery is a widely used python scheduling framework. It allows us to trigger a export generation with an API call and retreive the result when it's finished. This export generation is scheduled by celery beat to run every night for both records and logs. Also a cleanup job is run every night after the export to only keep the last 3 export file on the filesystem.
+
 
 ## Getting Started
 
@@ -96,7 +98,7 @@ remove it with 'docker volume rm <volume-name>'.
 To upgrade to the latest version you can do:
 ```bash
 git pull # to fetch the latest changes
-docker-compose up -d --build # rebuild the images, but will use the same data set
+bash ./update.sh # rebuilds the images, but will use the same data set
 ```
 
 
@@ -111,31 +113,72 @@ The cultURIze API supports the following functions
 
 **List all records**
 
-`curl -s https://culturize.web.example.com/api/record -H
-"Culturize-Key: meemoosecretbeerstash"`
+`curl -s https://culturize.web.example.com/api/record -H "Culturize-Key: meemoosecretbeerstash"`
 
 **Add record**
 
-`curl -X POST https://culturize.web.example.com/api/record -d
-'[{"resource_url": "https://meemoo.be/kennisbanken", "persistent_url":
-"culturize.data/abc-123"}]' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
-
-**Add multiple records**
-
-`curl -X POST https://culturize.web.example.com/api/record -d
-'[{"resource_url": "https://meemoo.be/kennisbanken", "persistent_url":
-"culturize.data/abc-123"}, {“resource_url”: “https://example.com”, “persistent_url”: “culturize.data/123-abc”]' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
-
-**Disable record**
-
-`curl -X POST https://culturize.web.example.com/api/record -d '[{"resource_url": "https://meemoo.be/kennisbanken", "enabled": false, "persistent_url": "culturize.data/abc-123"}]' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"
-**Print logs**
-curl -s https://culturize.douwe.linuxbe.com/api/logs --header
-"Culturize-Key: meemoosecretbeerstash"`
+- please note that the persistent_url only contains the base domain and the path, not the https:// part.
+- the resource url is the full url description
+```
+curl -X POST https://culturize.web.example.com/api/record -d '{\
+  "resource_url": "https://meemoo.be/kennisbanken", \
+  "persistent_url": "culturize.data/abc-123"\
+}'\
+-H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"
+```
 
 When the Webservice has activated a persistent URI, it produces a respons
 
 `[{"resource_url":"https://meemoo.be/kennisbanken","persistent_url":"culturize.data/abc-123"}]l`
+
+**Add multiple records**
+
+```
+curl -X POST https://culturize.web.example.com/api/record -d '[\
+  {\
+    "resource_url": "https://meemoo.be/kennisbanken",\
+    "persistent_url": "culturize.data/abc-123"\
+  }, {\
+    “resource_url”: “https://example.com”,\
+    “persistent_url”: “culturize.data/123-abc”\
+  }\
+]' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"`
+```
+
+**Update record**
+
+- change disable state of a record, the persistent_url is the key identifier in
+  the database. For obvious reasons this can not be changed, and should always be
+  provided to identify the record. (remember: the persistent url should not contain the https:// part)
+```
+curl -X PUT https://culturize.web.example.com/api/record -d '{\
+  "persistent_url": "culturize.data/abc-123",\
+  "enabled": false\
+}' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"
+```
+
+```
+curl -X PUT https://culturize.web.example.com/api/record -d '{\
+  "persistent_url": "culturize.data/abc-123",\
+  "enabled": false\
+}' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"
+```
+- the response will be the update record object as it is stored in the server
+  database: it contains the persistent url, the resource urls, the enabled state
+  and a database id.
+
+- change resource URL
+```
+curl -X PUT https://culturize.web.example.com/api/record -d '{\
+  "persistent_url": "culturize.data/abc-123",\
+  "resource_url": "https://example.com/newpart"\
+}' -H "Content-Type: Application/JSON" -H "Culturize-Key: meemoosecretbeerstash"
+```
+
+**Print logs**
+
+`curl -s https://culturize.douwe.linuxbe.com/api/logs --header "Culturize-Key: meemoosecretbeerstash"`
+
 
 
 ## License

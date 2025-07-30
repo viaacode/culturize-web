@@ -24,7 +24,7 @@
         <tr>
           <th scope="row">CultURIze-web version</th>
           <td>
-            v1.1
+            v1.2
           </td>
         </tr>
       </tbody>
