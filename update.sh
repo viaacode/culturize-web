@@ -41,7 +41,7 @@ echo "starting new containers"
 docker-compose up -d --build
 
 echo "migrating database"
-docker compose exec web python manage.py migrate
+docker-compose exec web python manage.py migrate
 
 echo "update finished"
 
