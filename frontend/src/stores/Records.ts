@@ -126,17 +126,15 @@ export const useRecordsStore = defineStore("record", {
       this.serviceInfo = data;
     },
     async triggerLogExport() {
-      const resp = await culturize_web.get<any>("logexport", { responseAs: "response" });
+      await culturize_web.get<any>("logexport");
       this.logExporting = true;
       this.logIntervalID = setInterval(this.waitForNewExport, 5000, "log");
-      console.log(resp);
     },
 
     async triggerRecordExport() {
-      const resp = await culturize_web.get<any>("recordexport", { responseAs: "response" });
+      await culturize_web.get<any>("recordexport");
       this.recordExporting = true;
       this.recordIntervalID = setInterval(this.waitForNewExport, 5000, "record");
-      console.log(resp);
     },
 
     waitForNewExport(category: string) {
