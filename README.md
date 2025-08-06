@@ -95,10 +95,20 @@ remove it with 'docker volume rm <volume-name>'.
 
 ##### Upgrading
 
-To upgrade to the latest version you can do:
+To upgrade to the latest version you can do (when using the default setup, e.g. no changes made to the docker-compose.yml files):
 ```bash
 git pull # to fetch the latest changes
 bash ./update.sh # rebuilds the images, but will use the same data set
+```
+
+When running a custom setup the update steps should be performed manually:
+```bash
+git pull
+docker-compose down
+diff docker-compose.yml docker-compose.nginx.yml # check for changes in the default configuration
+# integrate the changes from the project
+docker-compose up -d --build
+docker-compose exec web python manage.py migrate # make sure the database is migrated
 ```
 
 
