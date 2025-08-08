@@ -1,5 +1,5 @@
 # first stage builds vue
-FROM node:19-alpine AS build-stage
+FROM node:22-alpine AS build-stage
 WORKDIR /app
 COPY . .
 RUN npm ci
