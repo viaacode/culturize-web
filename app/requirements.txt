@@ -7,3 +7,4 @@ psycopg2-binary==2.9.9
 gunicorn==23.0.0
 celery==5.5.3
 redis==6.4.0
+httpx>=0.28.1

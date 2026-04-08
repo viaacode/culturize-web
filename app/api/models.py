@@ -2,9 +2,16 @@ from django.db import models
 
 
 class Record(models.Model):
+    STATUS_CHOICES = [
+        ('NOT_TESTED', 'Not Tested'),
+        ('ONLINE', 'Online'),
+        ('OFFLINE', 'Offline'),
+    ]
+    
     resource_url = models.URLField(max_length=500)
     persistent_url = models.CharField(max_length=500, unique=True)
     enabled = models.BooleanField(default=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='NOT_TESTED')
 
     def __str__(self):
         return f'mapping of {self.persistent_url} to {self.resource_url}'

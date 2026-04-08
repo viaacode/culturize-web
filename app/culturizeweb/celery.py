@@ -19,7 +19,7 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 # Load task modules from all registered Django apps.
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
-app.conf.beat_schedule = {
+schedule = {
     'export-records': {
         'task': 'api.tasks.export_records',
         'schedule': crontab(minute=0, hour=2),
@@ -32,7 +32,16 @@ app.conf.beat_schedule = {
         'task': 'api.tasks.cleanup',
         'schedule': crontab(minute=0, hour=4),
     },
+    'check-url-availability': {
+        'task': 'api.tasks.check_url_availability',
+        'schedule': crontab.from_string(settings.URL_MONITORING_FREQUENCY),
+    },
 }
+
+if settings.URL_MONITORING_ENABLED.lower() != "enabled":
+    del schedule["check-url-availability"]
+
+app.conf.beat_schedule = schedule
 
 
 @shared_task()

@@ -163,3 +163,8 @@ REST_FRAMEWORK = {
 }
 
 CELERY_BROKER_URL = 'redis://redis:6379/0'
+
+# URL Monitoring Settings
+URL_MONITORING_ENABLED = os.environ.get('URL_MONITORING_ENABLED', 'false').lower() == 'true'
+URL_MONITORING_FREQUENCY = float(os.environ.get('URL_MONITORING_FREQUENCY', '3600'))  # Default: 1 hour
+URL_MONITORING_RATE_LIMIT = int(os.environ.get('URL_MONITORING_RATE_LIMIT', '10'))  # Requests per minute per domain

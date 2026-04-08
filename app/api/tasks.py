@@ -2,8 +2,15 @@ from celery import shared_task
 from datetime import datetime
 import os
 import subprocess
+import asyncio
+import aiohttp
+from urllib.parse import urlparse
+from collections import defaultdict
+from django.conf import settings
+import time
 
-from api.models import Export
+from api.models import Export, Record
+from api.url_checker import RateLimitedChecker
 
 from django.db.models import Subquery
 from django.core.paginator import Paginator
@@ -73,3 +80,17 @@ def cleanup():
         print(f"deleting {record.filename}")
         os.remove(f"/export-data/{record.filename}")
         record.delete()
+
+@shared_task(bind=True)
+def validate_all_resource_urls(self):
+    """
+    Celery task to trigger the async resource validator.
+    """
+    checker = RateLimitedChecker(rps=10, max_retries=3)
+    
+    try:
+        asyncio.run(checker.run())
+    except Exception as exc:
+        # Log the error or retry the Celery task itself if needed
+        print(f"Task failed: {exc}")
+        raise self.retry(exc=exc, countdown=60)
