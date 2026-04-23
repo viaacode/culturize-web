@@ -32,3 +32,6 @@ class Export(models.Model):
     datetime = models.DateTimeField(auto_now=True)
     filename = models.CharField(max_length=100)
 
+class URLCheck(models.Model):
+    duration = models.IntegerField()
+    start = models.DateTimeField()

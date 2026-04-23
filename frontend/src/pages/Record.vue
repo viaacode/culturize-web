@@ -31,6 +31,10 @@
           <th scope="row">Click count</th>
           <td v-if="state.recordLogs !== undefined">{{ state.recordLogs.click_count }}</td>
         </tr>
+        <tr>
+          <th scope="row">Status</th>
+          <td v-if="state.record !== undefined">{{ state.record.status }}</td>
+        </tr>
       </tbody>
     </table>
   </div>

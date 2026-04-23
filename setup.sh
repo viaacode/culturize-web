@@ -38,7 +38,7 @@ EOF
 read -r -p "Should cultURIze-web handle the HTTPS traffic? [Y/n]: " resp
 if [[ -z "$resp" || "$resp" == "Y" || "$resp" == "y" ]]; then
     use_swag=true
-elif [[ "$resp" == "n" || "$resp" == "N" ]]; then
+else
     use_swag=false
 fi
 
@@ -56,6 +56,75 @@ echo "SQL_PASSWORD=${sql_password}" >> .env.web
 echo "SQL_HOST=${sql_host}" >> .env.web
 echo "SQL_PORT=${sql_port}" >> .env.web
 echo "DATABASE=${database}" >> .env.web
+
+cat << EOF
+Culturize-web can check if resource URL are still online and report any resources that went offline.
+EOF
+read -r -p "Should cultURIze-web check the resource URL's? [Y/n]: " resp
+if [[ -z "$resp" || "$resp" == "Y" || "$resp" == "y" ]]; then
+    use_checker=true
+else
+    use_checker=false
+fi
+
+if [[ "$use_checker" == true ]]; then
+    echo "URL_MONITORING_ENABLED=true" >> .env.web
+    read -r -p "Monitoring interval configuration (cron style, default: 1 1 * * *)? [empty for default]: " resp
+    if [[ -z "$resp" ]]; then
+        echo "URL_MONITORING_FREQUENCY=1 1 * * *" >> .env.web
+    else
+        echo "URL_MONITORING_FREQUENCY=$resp" >> .env.web
+    fi
+
+    read -r -p "Monitoring rate limit configuration (max requests per second, 10 default)? [empty for default]: " resp
+    if [[ -z "$resp" ]]; then
+        echo "URL_MONITORING_RATE_LIMIT=10" >> .env.web
+    else
+        echo "URL_MONITORING_RATE_LIMIT=$resp" >> .env.web
+    fi
+
+    read -r -p "Should cultURIze-web report (mail) broken links? [Y/n]: " resp
+    if [[ -z "$resp" || "$resp" == "Y" || "$resp" == "y" ]]; then
+        use_reporter=true
+    else
+        use_reporter=false
+    fi
+
+    if [[ "$use_reporter" == true ]]; then
+        echo "URL_MONITORING_REPORTING_ENABLED=true" >> .env.web
+        read -r -p "Email host (SMTP endpoint)?: " resp
+        if [[ -z "$resp" ]]; then
+            echo "no email host given, abort"
+            exit 1
+        else
+            echo "EMAIL_HOST=$resp" >> .env.web
+        fi
+
+        read -r -p "Email host user?: " resp
+        if [[ -z "$resp" ]]; then
+            echo "no email host user given, abort"
+            exit 1
+        else
+            echo "EMAIL_HOST_USER=$resp" >> .env.web
+        fi
+
+        read -r -p "Email host password?: " resp
+        if [[ -z "$resp" ]]; then
+            echo "no email host password given, abort"
+            exit 1
+        else
+            echo "EMAIL_HOST_PASSWORD=$resp" >> .env.web
+        fi
+
+        read -r -p "Email port?: " resp
+        if [[ -z "$resp" ]]; then
+            echo "no email port given, abort"
+            exit 1
+        else
+            echo "EMAIL_PORT=$resp" >> .env.web
+        fi
+    fi
+fi
 
 
 echo "POSTGRES_USER=${sql_user}" > .env.db

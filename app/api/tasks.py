@@ -3,17 +3,13 @@ from datetime import datetime
 import os
 import subprocess
 import asyncio
-import aiohttp
-from urllib.parse import urlparse
-from collections import defaultdict
-from django.conf import settings
-import time
 
-from api.models import Export, Record
+from api.models import Export, URLCheck, Record
 from api.url_checker import RateLimitedChecker
 
 from django.db.models import Subquery
-from django.core.paginator import Paginator
+from django.core.mail import send_mail
+from django.conf import settings
 
 @shared_task()
 def export_records():
@@ -83,9 +79,7 @@ def cleanup():
 
 @shared_task(bind=True)
 def validate_all_resource_urls(self):
-    """
-    Celery task to trigger the async resource validator.
-    """
+    start = datetime.now()
     checker = RateLimitedChecker(rps=10, max_retries=3)
     
     try:
@@ -94,3 +88,20 @@ def validate_all_resource_urls(self):
         # Log the error or retry the Celery task itself if needed
         print(f"Task failed: {exc}")
         raise self.retry(exc=exc, countdown=60)
+
+    end = datetime.now()
+    duration = end - start
+    URLCheck(duration=duration.total_seconds(), start=start).save()
+
+    offline_records = Record.objects.filter(enabled=True, status="OFFLINE")[:100]
+
+    if offline_records.count():
+        message = "Scan detected offline URL's:\n"
+        for record in offline_records:
+            message += f"{record.persistent_url} pointing to {record.resource_url}\n"
+
+        send_mail("CulrURIze-web url check failures",
+                message,
+                settings.EMAIL_HOST_USER,
+                [settings.EMAIL_HOST_USER],
+                fail_silently=True)

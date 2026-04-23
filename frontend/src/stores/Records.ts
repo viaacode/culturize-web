@@ -23,6 +23,7 @@ export interface CRecord {
   resource_url: string;
   persistent_url: string;
   enabled: boolean;
+  status: string;
 }
 export interface PaginatedRecord {
   count: number;

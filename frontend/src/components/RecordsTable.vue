@@ -67,6 +67,7 @@
           <th>Persistent URL</th>
           <th>Resource URL</th>
           <th>Enabled</th>
+          <th>Status</th>
           <th>Actions</th>
           <th></th>
         </tr>
@@ -79,6 +80,7 @@
           <td>{{ record.persistent_url }}</td>
           <td>{{ record.resource_url }}</td>
           <td>{{ record.enabled }}</td>
+          <td>{{ record.status }}</td>
           <td>
             <router-link
               class="nav-link"

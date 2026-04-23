@@ -14,6 +14,7 @@ The cultURIze webservice has been built as a multi container docker application.
 
 To support generating data exports in the backgroud 2 celery containers and a redis container were added. Celery is a widely used python scheduling framework. It allows us to trigger a export generation with an API call and retreive the result when it's finished. This export generation is scheduled by celery beat to run every night for both records and logs. Also a cleanup job is run every night after the export to only keep the last 3 export file on the filesystem.
 
+Optionally URL status checking can be enabled that will periodically check all enabled records to see if the resource URL they are pointing to is still active. The status will be stored alongside the record in our database. Reporting of these broken links can be enabled to send a mail with the broken records. For this an SMTP endpoint with authentication needs to be configured.
 
 ## Getting Started
 
@@ -52,6 +53,16 @@ SQL_PASSWORD=culturize
 SQL_HOST=db
 SQL_PORT=5432
 DATABASE=postgres
+URL_MONITORING_ENABLED=true
+URL_MONITORING_FREQUENCY="1 1 * * *"
+URL_MONITORING_RATE_LIMIT=10
+
+URL_MONITORING_REPORTING_ENABLED=false
+EMAIL_HOST=smtp.google.com
+EMAIL_HOST_USER=username
+EMAIL_HOST_PASSWORD=passcode
+EMAIL_PORT=587
+EMAIL_USE_TLS=true
 ```
 * Create another file at the root of the repo `.env.db`, make sure the username and password from `SQL_DATABASE=` and `SQL_PASSWORD=` are in sync with `POSTGRES_PASSWORD=` and `POSTGRES_DB=` from `.env.web`.
 ```
@@ -110,6 +121,7 @@ docker-compose up -d --build
 docker-compose exec web python manage.py migrate # make sure the database is migrated
 ```
 
+New environment options (like the URL reporting feature) are not automatically configered and should be added directly in the `.env.web` file. Restart the application after changes to the .env file for them to have effect.
 
 
 ## API documentation:

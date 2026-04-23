@@ -32,14 +32,13 @@ schedule = {
         'task': 'api.tasks.cleanup',
         'schedule': crontab(minute=0, hour=4),
     },
-    'check-url-availability': {
-        'task': 'api.tasks.check_url_availability',
-        'schedule': crontab.from_string(settings.URL_MONITORING_FREQUENCY),
-    },
 }
 
-if settings.URL_MONITORING_ENABLED.lower() != "enabled":
-    del schedule["check-url-availability"]
+if settings.URL_MONITORING_ENABLED:
+    schedule["validate_all_resource_urls"] = {
+        'task': 'api.tasks.validate_all_resource_urls',
+        'schedule': crontab.from_string(settings.URL_MONITORING_FREQUENCY),
+    }
 
 app.conf.beat_schedule = schedule
 

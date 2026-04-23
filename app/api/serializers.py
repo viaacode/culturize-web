@@ -10,6 +10,7 @@ class RecordSerializer(serializers.Serializer):
     resource_url = serializers.URLField(required=True)
     persistent_url = serializers.CharField(required=True)
     enabled = serializers.BooleanField(required=False)
+    status = serializers.CharField(read_only=True, required=False)
 
     def create(self, validated_data):
         try:
