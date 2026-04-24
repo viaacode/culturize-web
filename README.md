@@ -42,6 +42,10 @@ Make sure the server is configure with SSL to ensure communication to and from t
 * Copy paste this inside the `.env.web` file. Replace "culturize" after `SQL_DATABASE=` and `SQL_PASSWORD=` with your own made up name and password. Update the `DJANGO_ALLOWED_HOSTS` to contain the domain name.
 * **important**: replace the secret key in this file with a newly random generated key (it is used
   internally and should be as random as possible)
+* For the URL monitoring feature some important remarks:
+  * The frequency (when to start the monitoring job) is in crontab format (use eg <https://crontab.guru/> for help)
+  * The rate limit is max requests to be send per second. Make sure that the total duration doesn't make the next monitoring job overlap with the current one.
+  * To enable monitoring reporting an SMTP endpoint needs to be configured
 ```
 DEBUG=0
 SECRET_KEY=ruWxpjmdysErePWRKEpckOCCefmIGp
