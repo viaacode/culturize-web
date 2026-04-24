@@ -16,6 +16,8 @@ To support generating data exports in the backgroud 2 celery containers and a re
 
 Optionally URL status checking can be enabled that will periodically check all enabled records to see if the resource URL they are pointing to is still active. The status will be stored alongside the record in our database. Reporting of these broken links can be enabled to send a mail with the broken records. For this an SMTP endpoint with authentication needs to be configured.
 
+The monitoring will first send a HEAD request, if that doesn't return a 200 OK then we perfom a GET request as the HEAD feature is not always implemented correctly. For the GET request we avoid reading the whole message body to not overload our server. 
+
 ## Getting Started
 
 ### For users
