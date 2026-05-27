@@ -169,7 +169,7 @@ URL_MONITORING_ENABLED = os.environ.get('URL_MONITORING_ENABLED', 'false').lower
 URL_MONITORING_FREQUENCY = os.environ.get('URL_MONITORING_FREQUENCY', '1 1 * * *')  # Default: 01:01 every day
 URL_MONITORING_RATE_LIMIT = int(os.environ.get('URL_MONITORING_RATE_LIMIT', '10'))  # Requests per second
 
-URL_MONITORING_REPORTING_ENABLED = os.environ.get('URL_MONITORING_RATE_LIMIT', 'false') == 'true'
+URL_MONITORING_REPORTING_ENABLED = os.environ.get('URL_MONITORING_REPORTING_ENABLED', 'false').lower() == 'true'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')

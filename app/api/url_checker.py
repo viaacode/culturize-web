@@ -89,7 +89,7 @@ class RateLimitedChecker:
 
     async def run(self):
         # We fetch records in small chunks to keep memory usage near zero
-        queryset = Record.objects.all().values_list('id', 'resource_url').iterator(chunk_size=1000)
+        queryset = Record.objects.filter(enabled=True).values_list('id', 'resource_url').iterator(chunk_size=1000)
         
         next_time = time.monotonic()
         tasks = set()

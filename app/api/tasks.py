@@ -80,7 +80,7 @@ def cleanup():
 @shared_task(bind=True)
 def validate_all_resource_urls(self):
     start = datetime.now()
-    checker = RateLimitedChecker(rps=10, max_retries=3)
+    checker = RateLimitedChecker(rps=settings.URL_MONITORING_RATE_LIMIT, max_retries=3)
     
     try:
         asyncio.run(checker.run())
