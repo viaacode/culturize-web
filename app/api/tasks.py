@@ -93,6 +93,9 @@ def validate_all_resource_urls(self):
     duration = end - start
     URLCheck(duration=duration.total_seconds(), start=start).save()
 
+    if not settings.URL_MONITORING_REPORTING_ENABLED:
+        return
+
     offline_records = Record.objects.filter(enabled=True, status="OFFLINE")[:100]
 
     if offline_records.count():
