@@ -1,7 +1,8 @@
 # CultURIze-Web
 
 
-![20230726-meemoo-logo-culturize-web](https://github.com/viaacode/culturize-web/assets/14292591/31523e53-1dd4-4647-a6e9-5788eac1c12a)
+<!--![20230726-meemoo-logo-culturize-web](https://github.com/viaacode/culturize-web/assets/14292591/31523e53-1dd4-4647-a6e9-5788eac1c12a)-->
+![resolver  _ Culturize App _ Culturize Web](https://github.com/viaacode/culturize-web/assets/14292591/60717c3f-beb5-4158-9b88-25280da05265)
 
 
 This is the GitHub repository for CultURIze webservice.
@@ -205,6 +206,15 @@ curl -X PUT https://culturize.web.example.com/api/record -d '{\
 **Print logs**
 
 `curl -s https://culturize.douwe.linuxbe.com/api/logs --header "Culturize-Key: meemoosecretbeerstash"`
+
+
+
+## License
+CC BY-SA 4.0 meemoo 
+
+All content in this repository is released under the [CC-BY-SA License](https://creativecommons.org/licenses/by-sa/4.0/).
+
+The code of CultURIze is released under the [MIT License](https://opensource.org/licenses/MIT).
 
 
 
