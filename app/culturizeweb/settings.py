@@ -170,8 +170,9 @@ URL_MONITORING_FREQUENCY = os.environ.get('URL_MONITORING_FREQUENCY', '1 1 * * *
 URL_MONITORING_RATE_LIMIT = int(os.environ.get('URL_MONITORING_RATE_LIMIT', '10'))  # Requests per second
 
 URL_MONITORING_REPORTING_ENABLED = os.environ.get('URL_MONITORING_REPORTING_ENABLED', 'false').lower() == 'true'
+URL_MONITORING_REPORTING_EMAIL_SUBJECT = os.environ.get('URL_MONITORING_REPORTING_EMAIL_SUBJECT', 'CultURIze URL check failures')
 EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', True)
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'true').lower() == 'true'

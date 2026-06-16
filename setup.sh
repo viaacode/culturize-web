@@ -92,6 +92,13 @@ if [[ "$use_checker" == true ]]; then
 
     if [[ "$use_reporter" == true ]]; then
         echo "URL_MONITORING_REPORTING_ENABLED=true" >> .env.web
+        read -r -p "Email subject line? [${domain_name} URL check failures]" resp
+        if [[ -z "$resp" ]]; then
+            echo "URL_MONITORING_REPORTING_EMAIL_SUBJECT=$domain_name URL check failures" >> .env.web
+        else
+            echo "URL_MONITORING_REPORTING_EMAIL_SUBJECT=$resp" >> .env.web
+        fi
+
         read -r -p "Email host (SMTP endpoint)?: " resp
         if [[ -z "$resp" ]]; then
             echo "no email host given, abort"

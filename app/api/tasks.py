@@ -103,8 +103,8 @@ def validate_all_resource_urls(self):
         for record in offline_records:
             message += f"{record.persistent_url} pointing to {record.resource_url}\n"
 
-        send_mail("CulrURIze-web url check failures",
-                message,
-                settings.EMAIL_HOST_USER,
-                [settings.EMAIL_HOST_USER],
-                fail_silently=True)
+        send_mail(settings.URL_MONITORING_EMAIL_SUBJECT,
+                  message,
+                  settings.EMAIL_HOST_USER,
+                  [settings.EMAIL_HOST_USER],
+                  fail_silently=True)
