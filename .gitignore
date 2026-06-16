@@ -3,3 +3,4 @@ venv/
 docker-compose.yml
 .env*
 app/culturizeweb/accesskey
+app/db.sqlite3
