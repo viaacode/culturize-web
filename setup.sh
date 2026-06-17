@@ -71,9 +71,9 @@ if [[ "$use_checker" == true ]]; then
     echo "URL_MONITORING_ENABLED=true" >> .env.web
     read -r -p "Monitoring interval configuration (cron style, default: 1 1 * * *)? [empty for default]: " resp
     if [[ -z "$resp" ]]; then
-        echo "URL_MONITORING_FREQUENCY='1 1 * * *'" >> .env.web
+        echo "URL_MONITORING_FREQUENCY=1 1 * * *" >> .env.web
     else
-        echo "URL_MONITORING_FREQUENCY='$resp'" >> .env.web
+        echo "URL_MONITORING_FREQUENCY=$resp" >> .env.web
     fi
 
     read -r -p "Monitoring rate limit configuration (max requests per second, 10 default)? [empty for default]: " resp

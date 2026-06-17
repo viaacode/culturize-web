@@ -184,7 +184,7 @@ class Login(APIView):
         return HttpResponse()
 
 def redirect_view(request, persistent_path):
-    persistent_url = f"{request.META['HTTP_HOST']}/{persistent_path}"
+    persistent_url = f"{request.get_host()}/{persistent_path}"
     
     try:
         record = Record.objects.get(persistent_url=persistent_url)

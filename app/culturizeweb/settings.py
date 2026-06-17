@@ -168,6 +168,7 @@ CELERY_BROKER_URL = 'redis://redis:6379/0'
 URL_MONITORING_ENABLED = os.environ.get('URL_MONITORING_ENABLED', 'false').lower() == 'true'
 URL_MONITORING_FREQUENCY = os.environ.get('URL_MONITORING_FREQUENCY', '1 1 * * *')  # Default: 01:01 every day
 URL_MONITORING_RATE_LIMIT = int(os.environ.get('URL_MONITORING_RATE_LIMIT', '10'))  # Requests per second
+URL_MONITORING_MAX_CONCURRENT = int(os.environ.get('URL_MONITORING_MAX_CONCURRENT', '50'))  # Max in-flight requests
 
 URL_MONITORING_REPORTING_ENABLED = os.environ.get('URL_MONITORING_REPORTING_ENABLED', 'false').lower() == 'true'
 URL_MONITORING_REPORTING_EMAIL_SUBJECT = os.environ.get('URL_MONITORING_REPORTING_EMAIL_SUBJECT', 'CultURIze URL check failures')

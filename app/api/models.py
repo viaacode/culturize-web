@@ -6,6 +6,8 @@ class Record(models.Model):
         ('NOT_TESTED', 'Not Tested'),
         ('ONLINE', 'Online'),
         ('OFFLINE', 'Offline'),
+        ('RESTRICTED', 'Restricted'),
+        ('ERROR', 'Error'),
     ]
     
     resource_url = models.URLField(max_length=500)

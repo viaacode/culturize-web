@@ -2,9 +2,6 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from api.models import Record, RequestLog
 
-from django.db.utils import IntegrityError
-
-
 class RecordSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True, required=False)
     resource_url = serializers.URLField(required=True)
@@ -13,11 +10,11 @@ class RecordSerializer(serializers.Serializer):
     status = serializers.CharField(read_only=True, required=False)
 
     def create(self, validated_data):
-        try:
-            record = Record.objects.create(**validated_data)
-        except IntegrityError as e:
-            record = Record.objects.get(persistent_url=validated_data["persistent_url"])
-            self.update(record, validated_data)
+        defaults = {k: v for k, v in validated_data.items() if k != "persistent_url"}
+        record, _ = Record.objects.update_or_create(
+            persistent_url=validated_data["persistent_url"],
+            defaults=defaults,
+        )
         return record
 
     def update(self, instance, validated_data):

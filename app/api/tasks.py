@@ -80,7 +80,11 @@ def cleanup():
 @shared_task(bind=True)
 def validate_all_resource_urls(self):
     start = datetime.now()
-    checker = RateLimitedChecker(rps=settings.URL_MONITORING_RATE_LIMIT, max_retries=3)
+    checker = RateLimitedChecker(
+        rps=settings.URL_MONITORING_RATE_LIMIT,
+        max_retries=3,
+        max_concurrent=settings.URL_MONITORING_MAX_CONCURRENT,
+    )
     
     try:
         asyncio.run(checker.run())
@@ -96,12 +100,12 @@ def validate_all_resource_urls(self):
     if not settings.URL_MONITORING_REPORTING_ENABLED:
         return
 
-    offline_records = Record.objects.filter(enabled=True, status="OFFLINE")[:100]
+    problem_records = Record.objects.filter(enabled=True, status__in=["OFFLINE", "ERROR"])[:100]
 
-    if offline_records.count():
-        message = "Scan detected offline URL's:\n"
-        for record in offline_records:
-            message += f"{record.persistent_url} pointing to {record.resource_url}\n"
+    if problem_records.count():
+        message = "Scan detected unreachable URL's:\n"
+        for record in problem_records:
+            message += f"[{record.status}] {record.persistent_url} -> {record.resource_url}\n"
 
         send_mail(settings.URL_MONITORING_REPORTING_EMAIL_SUBJECT,
                   message,
