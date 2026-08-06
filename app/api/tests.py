@@ -184,7 +184,7 @@ class PuriCheckDisabledSerializerTests(TestCase):
 # ---------------------------------------------------------------------------
 
 @patch("api.views.access_key", TEST_KEY)
-@override_settings(PURI_CHECK=True, ALLOWED_HOSTS=["culturize.data"])
+@override_settings(PURI_CHECK=True, ALLOWED_HOSTS=["culturize.data", "testserver"])
 class PuriCheckViewTests(TestCase):
     H = {"HTTP_CULTURIZE_KEY": TEST_KEY}
 
@@ -207,13 +207,13 @@ class PuriCheckViewTests(TestCase):
         self.assertEqual(resp.status_code, 400)
         self.assertIn("persistent_url", resp.json())
 
-    def test_put_with_wrong_domain_returns_400(self):
-        Record.objects.create(
+    def test_put_by_id_with_wrong_domain_returns_400(self):
+        r = Record.objects.create(
             persistent_url="culturize.data/existing",
             resource_url="https://old.example.com",
         )
         resp = self.client.put(
-            "/api/record",
+            f"/api/record/{r.id}",
             {"resource_url": "https://new.example.com", "persistent_url": "wrong.domain/existing"},
             content_type="application/json",
             **self.H,
