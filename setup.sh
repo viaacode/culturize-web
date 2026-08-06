@@ -58,6 +58,16 @@ echo "SQL_PORT=${sql_port}" >> .env.web
 echo "DATABASE=${database}" >> .env.web
 
 cat << EOF
+Culturize-web can check if persistent URI in the api data contain the domain name as part of it (otherwise they won't work) and return an error when the domain name is not found.
+EOF
+read -r -p "Should cultURIze-web check for the domain name in the persistent URI's? [Y/n]: " resp
+if [[ -z "$resp" || "$resp" == "Y" || "$resp" == "y" ]]; then
+    echo "PURI_CHECK=true" >> .env.web
+else
+    echo "PURI_CHECK=false" >> .env.web
+fi
+
+cat << EOF
 Culturize-web can check if resource URL are still online and report any resources that went offline.
 EOF
 read -r -p "Should cultURIze-web check the resource URL's? [Y/n]: " resp

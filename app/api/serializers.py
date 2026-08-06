@@ -2,6 +2,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from api.models import Record, RequestLog
 
+from django.conf import settings
+
 class RecordSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True, required=False)
     resource_url = serializers.URLField(required=True)
@@ -22,6 +24,16 @@ class RecordSerializer(serializers.Serializer):
         instance.enabled = validated_data.get('enabled', instance.enabled)
         instance.save()
         return instance
+
+    def validate_persistent_url(self, value):
+        if not settings.PURI_CHECK:
+            return value
+
+        if value.startswith(settings.ALLOWED_HOSTS[0]):
+            return value
+        raise serializers.ValidationError("persistent_url should start with the domain name")
+
+
 
 class RequestLogSerializer(serializers.Serializer):
     datetime = serializers.DateTimeField(required=True)

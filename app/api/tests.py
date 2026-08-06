@@ -12,7 +12,7 @@ from django.test import Client, TestCase, override_settings
 
 from api.models import Export, Record, RequestLog, URLCheck
 from api.serializers import RecordSerializer
-from api.url_checker import RateLimitedChecker, _map_status
+from api.url_checker import RateLimitedChecker, _PendingCounter, _map_status
 
 TEST_KEY = "test-access-key"
 
@@ -525,14 +525,58 @@ class ParseRetryAfterTests(TestCase):
 
 
 # ---------------------------------------------------------------------------
-# URL Checker — async behaviour
+# URL Checker — _PendingCounter
 # ---------------------------------------------------------------------------
 
-class CheckerAsyncTests(IsolatedAsyncioTestCase):
-    """Async unit tests for RateLimitedChecker.check_url.
+class PendingCounterTests(IsolatedAsyncioTestCase):
+    def test_starts_at_zero_and_is_settled(self):
+        p = _PendingCounter()
+        self.assertEqual(p._n, 0)
+        self.assertTrue(p._zero.is_set())
 
-    update_db is always replaced with AsyncMock so the DB is never touched.
-    """
+    def test_inc_clears_zero_event(self):
+        p = _PendingCounter()
+        p.inc()
+        self.assertFalse(p._zero.is_set())
+
+    def test_dec_to_zero_sets_event(self):
+        p = _PendingCounter()
+        p.inc()
+        p.dec()
+        self.assertTrue(p._zero.is_set())
+
+    def test_multiple_incs_require_matching_decs(self):
+        p = _PendingCounter()
+        for _ in range(3):
+            p.inc()
+        p.dec()
+        p.dec()
+        self.assertFalse(p._zero.is_set())
+        p.dec()
+        self.assertTrue(p._zero.is_set())
+
+    async def test_join_returns_immediately_when_empty(self):
+        p = _PendingCounter()
+        await asyncio.wait_for(p.join(), timeout=0.1)
+
+    async def test_join_blocks_until_dec(self):
+        p = _PendingCounter()
+        p.inc()
+
+        async def release():
+            await asyncio.sleep(0.05)
+            p.dec()
+
+        asyncio.create_task(release())
+        await asyncio.wait_for(p.join(), timeout=1.0)
+
+
+# ---------------------------------------------------------------------------
+# URL Checker — _check_one
+# ---------------------------------------------------------------------------
+
+class CheckOneTests(IsolatedAsyncioTestCase):
+    """Tests for _check_one. update_db and the httpx client are always mocked."""
 
     def _make_checker(self):
         return RateLimitedChecker(rps=1000, max_retries=2, max_concurrent=10)
@@ -549,36 +593,51 @@ class CheckerAsyncTests(IsolatedAsyncioTestCase):
         cm.__aexit__ = AsyncMock(return_value=False)
         return cm
 
+    def _setup(self, checker):
+        """Return (semaphore, retry_queue, redis_mock, pending) ready for _check_one."""
+        semaphore = asyncio.Semaphore(10)
+        retry_queue = asyncio.Queue()
+        redis = AsyncMock()
+        redis.ttl = AsyncMock(return_value=-2)  # no active backoff
+        redis.set = AsyncMock()
+        pending = _PendingCounter()
+        checker.update_db = AsyncMock()
+        return semaphore, retry_queue, redis, pending
+
+    async def _run(self, checker, semaphore, retry_queue, redis, attempt, pending,
+                   url="https://example.com", record_id=1, hostname="example.com"):
+        await checker._check_one(record_id, url, hostname, semaphore, retry_queue, redis, attempt, pending)
+
     async def test_head_200_marks_online(self):
         c = self._make_checker()
         c.client = AsyncMock()
         c.client.head = AsyncMock(return_value=self._resp(200))
-        c.update_db = AsyncMock()
-        await c.check_url(1, "https://example.com")
+        sem, q, redis, pending = self._setup(c)
+        await self._run(c, sem, q, redis, 0, pending)
         c.update_db.assert_called_once_with(1, "ONLINE")
 
     async def test_head_404_marks_offline(self):
         c = self._make_checker()
         c.client = AsyncMock()
         c.client.head = AsyncMock(return_value=self._resp(404))
-        c.update_db = AsyncMock()
-        await c.check_url(1, "https://example.com")
+        sem, q, redis, pending = self._setup(c)
+        await self._run(c, sem, q, redis, 0, pending)
         c.update_db.assert_called_once_with(1, "OFFLINE")
 
     async def test_head_401_marks_restricted(self):
         c = self._make_checker()
         c.client = AsyncMock()
         c.client.head = AsyncMock(return_value=self._resp(401))
-        c.update_db = AsyncMock()
-        await c.check_url(1, "https://example.com")
+        sem, q, redis, pending = self._setup(c)
+        await self._run(c, sem, q, redis, 0, pending)
         c.update_db.assert_called_once_with(1, "RESTRICTED")
 
     async def test_head_403_marks_restricted(self):
         c = self._make_checker()
         c.client = AsyncMock()
         c.client.head = AsyncMock(return_value=self._resp(403))
-        c.update_db = AsyncMock()
-        await c.check_url(1, "https://example.com")
+        sem, q, redis, pending = self._setup(c)
+        await self._run(c, sem, q, redis, 0, pending)
         c.update_db.assert_called_once_with(1, "RESTRICTED")
 
     async def test_ambiguous_head_falls_back_to_get(self):
@@ -587,8 +646,8 @@ class CheckerAsyncTests(IsolatedAsyncioTestCase):
         c.client = AsyncMock()
         c.client.head = AsyncMock(return_value=self._resp(500))
         c.client.stream = MagicMock(return_value=self._stream_cm(200))
-        c.update_db = AsyncMock()
-        await c.check_url(1, "https://example.com")
+        sem, q, redis, pending = self._setup(c)
+        await self._run(c, sem, q, redis, 0, pending)
         c.client.stream.assert_called_once()
         c.update_db.assert_called_once_with(1, "ONLINE")
 
@@ -598,65 +657,102 @@ class CheckerAsyncTests(IsolatedAsyncioTestCase):
         c.client = AsyncMock()
         c.client.head = AsyncMock(return_value=self._resp(404))
         c.client.stream = MagicMock()
-        c.update_db = AsyncMock()
-        await c.check_url(1, "https://example.com")
+        sem, q, redis, pending = self._setup(c)
+        await self._run(c, sem, q, redis, 0, pending)
         c.client.stream.assert_not_called()
 
-    async def test_timeout_retries_then_marks_error(self):
+    async def test_transient_error_enqueues_retry(self):
         c = self._make_checker()
         c.client = AsyncMock()
-        c.client.head = AsyncMock(side_effect=httpx.TimeoutException("timed out"))
-        c.update_db = AsyncMock()
-        with patch("asyncio.sleep", new_callable=AsyncMock):
-            await c.check_url(1, "https://example.com")
-        # max_retries=2 → 3 total attempts before giving up
-        self.assertEqual(c.client.head.call_count, 3)
+        c.client.head = AsyncMock(side_effect=httpx.TimeoutException("timeout"))
+        sem, q, redis, pending = self._setup(c)
+        await self._run(c, sem, q, redis, 0, pending)
+        self.assertEqual(q.qsize(), 1)
+        record_id, url, hostname, attempt, delay = q.get_nowait()
+        self.assertEqual(record_id, 1)
+        self.assertEqual(attempt, 1)
+        self.assertGreater(delay, 0)
+        c.update_db.assert_not_called()
+
+    async def test_transient_error_at_max_retries_marks_error(self):
+        c = self._make_checker()
+        c.client = AsyncMock()
+        c.client.head = AsyncMock(side_effect=httpx.TimeoutException("timeout"))
+        sem, q, redis, pending = self._setup(c)
+        await self._run(c, sem, q, redis, 2, pending)  # attempt == max_retries
+        self.assertTrue(q.empty())
         c.update_db.assert_called_once_with(1, "ERROR")
 
-    async def test_connect_error_retries_then_marks_error(self):
+    async def test_connect_error_enqueues_retry(self):
         c = self._make_checker()
         c.client = AsyncMock()
         c.client.head = AsyncMock(side_effect=httpx.ConnectError("refused"))
-        c.update_db = AsyncMock()
-        with patch("asyncio.sleep", new_callable=AsyncMock):
-            await c.check_url(1, "https://example.com")
-        self.assertEqual(c.client.head.call_count, 3)
+        sem, q, redis, pending = self._setup(c)
+        await self._run(c, sem, q, redis, 0, pending)
+        self.assertEqual(q.qsize(), 1)
+
+    async def test_connect_error_at_max_retries_marks_error(self):
+        c = self._make_checker()
+        c.client = AsyncMock()
+        c.client.head = AsyncMock(side_effect=httpx.ConnectError("refused"))
+        sem, q, redis, pending = self._setup(c)
+        await self._run(c, sem, q, redis, 2, pending)
+        self.assertTrue(q.empty())
         c.update_db.assert_called_once_with(1, "ERROR")
 
-    async def test_transient_error_then_success_recovers(self):
+    async def test_429_sets_redis_key_and_enqueues_retry(self):
         c = self._make_checker()
         c.client = AsyncMock()
-        c.client.head = AsyncMock(side_effect=[
-            httpx.TimeoutException("timeout"),
-            self._resp(200),
-        ])
-        c.update_db = AsyncMock()
-        with patch("asyncio.sleep", new_callable=AsyncMock):
-            await c.check_url(1, "https://example.com")
-        c.update_db.assert_called_once_with(1, "ONLINE")
+        c.client.head = AsyncMock(return_value=self._resp(429))
+        sem, q, redis, pending = self._setup(c)
+        await self._run(c, sem, q, redis, 0, pending)
+        redis.set.assert_called_once()
+        self.assertEqual(q.qsize(), 1)
+        record_id, url, hostname, attempt, delay = q.get_nowait()
+        self.assertEqual(attempt, 1)
+        self.assertEqual(delay, 0)  # 429 retries gate via Redis, not a delay
+        c.update_db.assert_not_called()
 
-    async def test_429_waits_and_retries(self):
-        c = self._make_checker()
-        c.client = AsyncMock()
-        c.client.head = AsyncMock(side_effect=[self._resp(429), self._resp(200)])
-        c.update_db = AsyncMock()
-        with patch.object(c, "_wait_for_429", new_callable=AsyncMock):
-            await c.check_url(1, "https://example.com")
-        c.update_db.assert_called_once_with(1, "ONLINE")
-
-    async def test_429_max_retries_marks_error(self):
+    async def test_429_at_max_retries_marks_error(self):
         c = RateLimitedChecker(rps=1000, max_retries=0, max_concurrent=10)
         c.client = AsyncMock()
         c.client.head = AsyncMock(return_value=self._resp(429))
-        c.update_db = AsyncMock()
-        with patch.object(c, "_wait_for_429", new_callable=AsyncMock):
-            await c.check_url(1, "https://example.com")
+        sem, q, redis, pending = self._setup(c)
+        await self._run(c, sem, q, redis, 0, pending)
+        self.assertTrue(q.empty())
         c.update_db.assert_called_once_with(1, "ERROR")
 
+    async def test_unknown_exception_marks_error(self):
+        c = self._make_checker()
+        c.client = AsyncMock()
+        c.client.head = AsyncMock(side_effect=RuntimeError("unexpected"))
+        sem, q, redis, pending = self._setup(c)
+        await self._run(c, sem, q, redis, 0, pending)
+        c.update_db.assert_called_once_with(1, "ERROR")
+
+    async def test_host_backoff_blocks_until_redis_key_expires(self):
+        """_wait_for_host_backoff polls redis.ttl until it returns -2 (key gone)."""
+        c = self._make_checker()
+        c.client = AsyncMock()
+        c.client.head = AsyncMock(return_value=self._resp(200))
+        sem, q, redis, pending = self._setup(c)
+        redis.ttl = AsyncMock(side_effect=[5, -2])
+        with patch("asyncio.sleep", new_callable=AsyncMock):
+            await self._run(c, sem, q, redis, 0, pending)
+        self.assertEqual(redis.ttl.call_count, 2)
+
     async def test_semaphore_caps_concurrency(self):
-        """Peak concurrent calls must not exceed max_concurrent."""
-        max_concurrent = 3
-        c = RateLimitedChecker(rps=1000, max_retries=0, max_concurrent=max_concurrent)
+        """Concurrent _check_one calls must not exceed the semaphore cap."""
+        cap = 3
+        sem = asyncio.Semaphore(cap)
+        q = asyncio.Queue()
+        redis = AsyncMock()
+        redis.ttl = AsyncMock(return_value=-2)
+        pending = _PendingCounter()
+
+        c = RateLimitedChecker(rps=cap, max_retries=0, max_concurrent=cap)
+        c.update_db = AsyncMock()
+
         active = 0
         peak = 0
 
@@ -673,11 +769,82 @@ class CheckerAsyncTests(IsolatedAsyncioTestCase):
 
         c.client = AsyncMock()
         c.client.head = slow_head
-        c.update_db = AsyncMock()
 
-        tasks = [asyncio.create_task(c.check_url(i, "https://example.com")) for i in range(10)]
+        tasks = [
+            asyncio.create_task(
+                c._check_one(i, "https://example.com", "example.com", sem, q, redis, 0, pending)
+            )
+            for i in range(10)
+        ]
         await asyncio.gather(*tasks)
-        self.assertLessEqual(peak, max_concurrent)
+        self.assertLessEqual(peak, cap)
+
+
+# ---------------------------------------------------------------------------
+# URL Checker — _retry_consumer
+# ---------------------------------------------------------------------------
+
+class RetryConsumerTests(IsolatedAsyncioTestCase):
+    def _make_checker(self):
+        return RateLimitedChecker(rps=10, max_retries=2, max_concurrent=10)
+
+    async def test_none_sentinel_stops_consumer(self):
+        c = self._make_checker()
+        q = asyncio.Queue()
+        await q.put(None)
+        pending = _PendingCounter()
+        await asyncio.wait_for(
+            c._retry_consumer(q, {}, {}, AsyncMock(), pending),
+            timeout=1.0,
+        )
+
+    async def test_queued_item_is_spawned(self):
+        c = self._make_checker()
+        spawn_calls = []
+
+        def fake_spawn(*args, **kwargs):
+            spawn_calls.append(kwargs or args)
+
+        c._spawn = fake_spawn
+
+        q = asyncio.Queue()
+        pending = _PendingCounter()
+        pending.inc()  # simulate item having been enqueued
+        await q.put((1, "https://example.com", "example.com", 1, 0))
+        await q.put(None)
+
+        await c._retry_consumer(q, {}, {}, AsyncMock(), pending)
+        self.assertEqual(len(spawn_calls), 1)
+
+    async def test_positive_delay_causes_sleep(self):
+        c = self._make_checker()
+        c._spawn = MagicMock()
+
+        q = asyncio.Queue()
+        pending = _PendingCounter()
+        pending.inc()
+        await q.put((1, "https://example.com", "example.com", 1, 30))
+        await q.put(None)
+
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            await c._retry_consumer(q, {}, {}, AsyncMock(), pending)
+
+        mock_sleep.assert_called_once_with(30)
+
+    async def test_zero_delay_skips_sleep(self):
+        c = self._make_checker()
+        c._spawn = MagicMock()
+
+        q = asyncio.Queue()
+        pending = _PendingCounter()
+        pending.inc()
+        await q.put((1, "https://example.com", "example.com", 1, 0))
+        await q.put(None)
+
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            await c._retry_consumer(q, {}, {}, AsyncMock(), pending)
+
+        mock_sleep.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
