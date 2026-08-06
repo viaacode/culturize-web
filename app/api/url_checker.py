@@ -141,13 +141,15 @@ class RateLimitedChecker:
         redis: aioredis.Redis,
         attempt: int,
         host_active: dict,
+        pending: _PendingCounter,
     ) -> asyncio.Task:
         """Create a _check_one task and wire the shared tracking callbacks."""
+        pending.inc()
         host_active[hostname] = host_active.get(hostname, 0) + 1
         task = asyncio.create_task(
             self._check_one(
                 record_id, url, hostname,
-                semaphore, retry_queue, redis, attempt,
+                semaphore, retry_queue, redis, attempt, pending,
             )
         )
 
@@ -155,6 +157,7 @@ class RateLimitedChecker:
             host_active[hn] -= 1
             if host_active[hn] == 0:
                 del host_active[hn]
+            pending.dec()
 
         task.add_done_callback(_done)
         return task
@@ -170,6 +173,7 @@ class RateLimitedChecker:
         retry_queue: asyncio.Queue,
         redis: aioredis.Redis,
         attempt: int,
+        pending: _PendingCounter,
     ) -> None:
         """Single URL check. On 429: sets Redis backoff key and enqueues retry."""
         # Block until any active 429 backoff for this host has expired.
@@ -188,6 +192,7 @@ class RateLimitedChecker:
                     key = f"{_429_KEY_PREFIX}{hostname}"
                     await redis.set(key, "1", ex=ttl)
                     if attempt < self.max_retries:
+                        pending.inc()
                         await retry_queue.put((record_id, url, hostname, attempt + 1, 0))
                     else:
                         await self.update_db(record_id, "ERROR")
@@ -198,6 +203,7 @@ class RateLimitedChecker:
             except _TRANSIENT:
                 if attempt < self.max_retries:
                     delay = min(2 ** attempt, 30)
+                    pending.inc()
                     await retry_queue.put((record_id, url, hostname, attempt + 1, delay))
                 else:
                     await self.update_db(record_id, "ERROR")
@@ -212,6 +218,7 @@ class RateLimitedChecker:
         host_pool: dict,
         host_active: dict,
         redis: aioredis.Redis,
+        pending: _PendingCounter,
     ) -> None:
         """
         Consume the retry queue until a None sentinel is received.
@@ -236,10 +243,11 @@ class RateLimitedChecker:
 
             # Replace the queued-item count with an active-task count atomically
             # (no await between dec and the inc inside _spawn).
+            pending.dec()
             self._spawn(
                 record_id, url, hostname,
                 host_pool[hostname], retry_queue, redis, attempt,
-                host_active,
+                host_active, pending,
             )
             retry_queue.task_done()
 
@@ -252,9 +260,10 @@ class RateLimitedChecker:
         retry_queue: asyncio.Queue = asyncio.Queue()
         host_pool: dict[str, asyncio.Semaphore] = {}  # hostname → Semaphore(1)
         host_active: dict[str, int] = {}              # hostname → active task count
+        pending = _PendingCounter()
 
         retry_task = asyncio.create_task(
-            self._retry_consumer(retry_queue, host_pool, host_active, redis)
+            self._retry_consumer(retry_queue, host_pool, host_active, redis, pending)
         )
 
         queryset = (
@@ -293,12 +302,11 @@ class RateLimitedChecker:
             self._spawn(
                 record_id, url, hostname,
                 host_pool[hostname], retry_queue, redis, attempt=0,
-                host_active=host_active,
+                host_active=host_active, pending=pending,
             )
 
         # Wait for all tasks (initial + all retries) to complete.
-        while sum(host_active.values()):
-            await asyncio.sleep(0.1)
+        await pending.join()
 
         # Signal the retry consumer to shut down.
         await retry_queue.put(None)
