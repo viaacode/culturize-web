@@ -144,6 +144,84 @@ class RecordSerializerTests(TestCase):
 
 
 # ---------------------------------------------------------------------------
+# Serializers — PURI_CHECK validation
+# ---------------------------------------------------------------------------
+
+@override_settings(PURI_CHECK=True, ALLOWED_HOSTS=["culturize.data"])
+class PuriCheckSerializerTests(TestCase):
+    def test_matching_domain_is_accepted(self):
+        s = RecordSerializer(data={"resource_url": "https://example.com", "persistent_url": "culturize.data/abc-123"})
+        self.assertTrue(s.is_valid(), s.errors)
+
+    def test_matching_domain_with_subpath_is_accepted(self):
+        s = RecordSerializer(data={"resource_url": "https://example.com", "persistent_url": "culturize.data/a/b/c"})
+        self.assertTrue(s.is_valid(), s.errors)
+
+    def test_non_matching_domain_is_rejected(self):
+        s = RecordSerializer(data={"resource_url": "https://example.com", "persistent_url": "other.domain/abc-123"})
+        self.assertFalse(s.is_valid())
+        self.assertIn("persistent_url", s.errors)
+
+    def test_error_message_mentions_domain(self):
+        s = RecordSerializer(data={"resource_url": "https://example.com", "persistent_url": "wrong.domain/x"})
+        s.is_valid()
+        self.assertIn("domain", s.errors["persistent_url"][0].lower())
+
+
+@override_settings(PURI_CHECK=False, ALLOWED_HOSTS=["culturize.data"])
+class PuriCheckDisabledSerializerTests(TestCase):
+    def test_any_domain_accepted_when_disabled(self):
+        s = RecordSerializer(data={"resource_url": "https://example.com", "persistent_url": "other.domain/abc"})
+        self.assertTrue(s.is_valid(), s.errors)
+
+    def test_matching_domain_still_accepted_when_disabled(self):
+        s = RecordSerializer(data={"resource_url": "https://example.com", "persistent_url": "culturize.data/abc"})
+        self.assertTrue(s.is_valid(), s.errors)
+
+
+# ---------------------------------------------------------------------------
+# Views — PURI_CHECK enforcement
+# ---------------------------------------------------------------------------
+
+@patch("api.views.access_key", TEST_KEY)
+@override_settings(PURI_CHECK=True, ALLOWED_HOSTS=["culturize.data"])
+class PuriCheckViewTests(TestCase):
+    H = {"HTTP_CULTURIZE_KEY": TEST_KEY}
+
+    def test_post_with_matching_domain_succeeds(self):
+        resp = self.client.post(
+            "/api/record",
+            {"resource_url": "https://example.com", "persistent_url": "culturize.data/valid"},
+            content_type="application/json",
+            **self.H,
+        )
+        self.assertEqual(resp.status_code, 201)
+
+    def test_post_with_wrong_domain_returns_400(self):
+        resp = self.client.post(
+            "/api/record",
+            {"resource_url": "https://example.com", "persistent_url": "wrong.domain/invalid"},
+            content_type="application/json",
+            **self.H,
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("persistent_url", resp.json())
+
+    def test_put_with_wrong_domain_returns_400(self):
+        Record.objects.create(
+            persistent_url="culturize.data/existing",
+            resource_url="https://old.example.com",
+        )
+        resp = self.client.put(
+            "/api/record",
+            {"resource_url": "https://new.example.com", "persistent_url": "wrong.domain/existing"},
+            content_type="application/json",
+            **self.H,
+        )
+        self.assertEqual(resp.status_code, 400)
+
+
+# ---------------------------------------------------------------------------
 # Views — auth
 # ---------------------------------------------------------------------------
 

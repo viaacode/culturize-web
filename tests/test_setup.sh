@@ -180,8 +180,8 @@ reset_env() {
 echo ""
 echo "=== Test 1: nginx mode, explicit key, no monitoring ==="
 
-# Prompts: api_key  domain  swag  checker
-run_setup "myapikey123" "test.example.com" "n" "n"
+# Prompts: api_key  domain  swag  puri_check  checker
+run_setup "myapikey123" "test.example.com" "n" "n" "n"
 
 check_file_exists ".env.web"
 check_file_exists ".env.db"
@@ -213,7 +213,7 @@ echo ""
 echo "=== Test 2: auto-generated API key ==="
 reset_env
 
-run_setup "" "auto.example.com" "n" "n"
+run_setup "" "auto.example.com" "n" "n" "n"
 
 check_file_exists "app/culturizeweb/accesskey"
 key_len=$(wc -c < app/culturizeweb/accesskey | tr -d ' \n')
@@ -232,7 +232,7 @@ echo ""
 echo "=== Test 3: SWAG (HTTPS) mode ==="
 reset_env
 
-run_setup "swagkey" "swag.example.com" "y" "n"
+run_setup "swagkey" "swag.example.com" "y" "n" "n"
 
 check_file_exists ".env.nginx"
 check_file_exists ".env.web"
@@ -264,8 +264,8 @@ echo ""
 echo "=== Test 4: monitoring, defaults, no reporting ==="
 reset_env
 
-# Prompts after checker=y: [freq] [rate] reporting
-run_setup "monitorkey" "monitor.example.com" "n" "y" "" "" "n"
+# Prompts: api_key  domain  swag  puri_check  checker  [freq]  [rate]  reporting
+run_setup "monitorkey" "monitor.example.com" "n" "n" "y" "" "" "n"
 
 check_var ".env.web" "URL_MONITORING_ENABLED" "true"
 check_var ".env.web" "URL_MONITORING_FREQUENCY" "1 1 \* \* \*"
@@ -283,7 +283,7 @@ echo ""
 echo "=== Test 5: monitoring, custom frequency/rate, no reporting ==="
 reset_env
 
-run_setup "customkey" "custom.example.com" "n" "y" "0 */6 * * *" "20" "n"
+run_setup "customkey" "custom.example.com" "n" "n" "y" "0 */6 * * *" "20" "n"
 
 check_var ".env.web" "URL_MONITORING_ENABLED" "true"
 check_var ".env.web" "URL_MONITORING_FREQUENCY" "0 \*/6 \* \* \*"
@@ -299,8 +299,7 @@ echo ""
 echo "=== Test 6: monitoring with email reporting, default subject ==="
 reset_env
 
-# Prompts after reporting=y: [subject] email_host email_user email_password email_port
-run_setup "reportkey" "report.example.com" "n" "y" "" "" "y" "" "smtp.example.com" "noreply@example.com" "s3cr3t" "587"
+run_setup "reportkey" "report.example.com" "n" "n" "y" "" "" "y" "" "smtp.example.com" "noreply@example.com" "s3cr3t" "587"
 
 check_var ".env.web" "URL_MONITORING_ENABLED" "true"
 check_var ".env.web" "URL_MONITORING_REPORTING_ENABLED" "true"
@@ -320,7 +319,7 @@ echo ""
 echo "=== Test 7: monitoring with email reporting, custom subject ==="
 reset_env
 
-run_setup "subjectkey" "subject.example.com" "n" "y" "" "" "y" "My custom subject" "smtp.example.com" "user@example.com" "pass123" "25"
+run_setup "subjectkey" "subject.example.com" "n" "n" "y" "" "" "y" "My custom subject" "smtp.example.com" "user@example.com" "pass123" "25"
 
 check_var ".env.web" "URL_MONITORING_REPORTING_EMAIL_SUBJECT" "My custom subject"
 check_var ".env.web" "EMAIL_PORT" "25"
@@ -334,7 +333,7 @@ echo ""
 echo "=== Test 8: SWAG mode with monitoring and reporting ==="
 reset_env
 
-run_setup "fullkey" "full.example.com" "y" "y" "0 3 * * *" "5" "y" "" "smtp.full.com" "alerts@full.com" "fullpass" "465"
+run_setup "fullkey" "full.example.com" "y" "n" "y" "0 3 * * *" "5" "y" "" "smtp.full.com" "alerts@full.com" "fullpass" "465"
 
 check_file_exists ".env.nginx"
 check_var ".env.nginx" "URL" "full\.example\.com"
@@ -370,7 +369,7 @@ echo ""
 echo "=== Test 10: reporting — empty email host aborts ==="
 reset_env
 
-if run_setup "key" "abort.example.com" "n" "y" "" "" "y" "" ""; then
+if run_setup "key" "abort.example.com" "n" "n" "y" "" "" "y" "" ""; then
   fail "setup.sh should abort when email host is empty"
 else
   pass "setup.sh aborted on empty email host"
@@ -383,7 +382,7 @@ echo ""
 echo "=== Test 11: reporting — empty email user aborts ==="
 reset_env
 
-if run_setup "key" "abort.example.com" "n" "y" "" "" "y" "" "smtp.example.com" ""; then
+if run_setup "key" "abort.example.com" "n" "n" "y" "" "" "y" "" "smtp.example.com" ""; then
   fail "setup.sh should abort when email user is empty"
 else
   pass "setup.sh aborted on empty email user"
@@ -396,7 +395,7 @@ echo ""
 echo "=== Test 12: reporting — empty email password aborts ==="
 reset_env
 
-if run_setup "key" "abort.example.com" "n" "y" "" "" "y" "" "smtp.example.com" "user@example.com" ""; then
+if run_setup "key" "abort.example.com" "n" "n" "y" "" "" "y" "" "smtp.example.com" "user@example.com" ""; then
   fail "setup.sh should abort when email password is empty"
 else
   pass "setup.sh aborted on empty email password"
@@ -409,11 +408,36 @@ echo ""
 echo "=== Test 13: reporting — empty email port aborts ==="
 reset_env
 
-if run_setup "key" "abort.example.com" "n" "y" "" "" "y" "" "smtp.example.com" "user@example.com" "pass" ""; then
+if run_setup "key" "abort.example.com" "n" "n" "y" "" "" "y" "" "smtp.example.com" "user@example.com" "pass" ""; then
   fail "setup.sh should abort when email port is empty"
 else
   pass "setup.sh aborted on empty email port"
 fi
+
+# ---------------------------------------------------------------------------
+# Test 14: PURI_CHECK enabled — default (empty) answer
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Test 14: PURI_CHECK enabled (default empty answer) ==="
+reset_env
+
+# Prompts: api_key  domain  swag  puri_check(empty=true)  checker
+run_setup "purikey1" "puri.example.com" "n" "" "n"
+
+check_var ".env.web" "PURI_CHECK" "true"
+validate_django_check
+
+# ---------------------------------------------------------------------------
+# Test 15: PURI_CHECK disabled — explicit "n" answer
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Test 15: PURI_CHECK disabled (explicit n) ==="
+reset_env
+
+run_setup "purikey2" "puri2.example.com" "n" "n" "n"
+
+check_var ".env.web" "PURI_CHECK" "false"
+validate_django_check
 
 # ---------------------------------------------------------------------------
 echo ""
