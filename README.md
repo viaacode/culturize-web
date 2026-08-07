@@ -49,6 +49,7 @@ Make sure the server is configure with SSL to ensure communication to and from t
   * The frequency (when to start the monitoring job) is in crontab format (use eg <https://crontab.guru/> for help)
   * The rate limit is max requests to be send per second. Make sure that the total duration doesn't make the next monitoring job overlap with the current one.
   * To enable monitoring reporting an SMTP endpoint needs to be configured
+* optionally PURI_CHECK can be set to true to enable a validity check on added or updated persistent urls. They should start with the domain name.
 ```
 DEBUG=0
 SECRET_KEY=ruWxpjmdysErePWRKEpckOCCefmIGp
@@ -70,6 +71,8 @@ EMAIL_HOST_USER=username
 EMAIL_HOST_PASSWORD=passcode
 EMAIL_PORT=587
 EMAIL_USE_TLS=true
+
+PURI_CHECK=true
 ```
 * Create another file at the root of the repo `.env.db`, make sure the username and password from `SQL_DATABASE=` and `SQL_PASSWORD=` are in sync with `POSTGRES_PASSWORD=` and `POSTGRES_DB=` from `.env.web`.
 ```
