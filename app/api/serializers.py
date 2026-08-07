@@ -29,9 +29,9 @@ class RecordSerializer(serializers.Serializer):
         if not settings.PURI_CHECK:
             return value
 
-        if value.startswith(f"{settings.ALLOWED_HOSTS[0]}/"):
+        if value.startswith(f"{settings.ALLOWED_HOSTS[0]}/") and len(value) > len(f"{settings.ALLOWED_HOSTS[0]}/"):
             return value
-        raise serializers.ValidationError("persistent_url should start with the domain name followed by a /")
+        raise serializers.ValidationError("persistent_url should start with the domain name followed by a slash + something")
 
 
 
