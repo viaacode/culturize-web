@@ -35,6 +35,11 @@ paths:
                     type: string
                   persistent_url:
                     type: string
+                    description: >
+                      Domain and path only, without the scheme. The resolver matches
+                      this value exactly against the incoming host and path, so a
+                      value containing "https://" will never resolve.
+                    example: culturize.data/abc-123
                   enabled:
                     type: boolean
       responses:
@@ -66,6 +71,11 @@ paths:
                     type: string
                   persistent_url:
                     type: string
+                    description: >
+                      Domain and path only, without the scheme. The resolver matches
+                      this value exactly against the incoming host and path, so a
+                      value containing "https://" will never resolve.
+                    example: culturize.data/abc-123
                   enabled:
                     type: boolean
       responses:
